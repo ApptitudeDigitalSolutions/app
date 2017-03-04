@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="com.apptitudedigitalsolutions.ads.Main.MainActivity"
+    tools:showIn="@layout/app_bar_main">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true">
+
+            <Button
+                android:text="Scheduled Tests"
+                android:layout_width="wrap_content"
+                android:textSize="25sp"
+                android:layout_height="wrap_content"
+                android:id="@+id/tests_button"
+                android:onClick="testsButtonTap"
+                android:textColor="#6666ff"
+                android:layout_weight="1"
+                android:visibility="gone"
+                style="@style/Widget.AppCompat.Button.Borderless" />
+
+            <Button
+                android:text="Scheduled AC's"
+                android:textSize="25sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/acs_button"
+                android:onClick="acsButtonTap"
+                android:textColor="#6a9afb"
+                android:layout_weight="1"
+                android:visibility="gone"
+                android:elevation="0dp"
+                style="@style/Widget.AppCompat.Button.Borderless" />
+        </LinearLayout>
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/my_recycler_view"
+            android:scrollbars="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:orientation="vertical"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            android:id="@+id/empty_list_layout"
+            android:layout_height="match_parent">
+
+            <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+                android:padding="10dp"
+            android:textSize="22sp"
+            android:textColor="@android:color/black"
+            android:text="Welcome to the Apptitude Digital Solutions Platform."/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="15sp"
+                android:padding="10dp"
+                android:text="Home to the most effective assessment centre platform on the market"/>
+
+        </LinearLayout>
+    </LinearLayout>
+
+</RelativeLayout>

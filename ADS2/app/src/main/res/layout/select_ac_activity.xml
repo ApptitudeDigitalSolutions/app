@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginLeft="50dp"
+    android:layout_marginRight="50dp"
+    android:layout_marginTop="20dp">
+
+    <TextView
+        android:text="Assessment Center Activities"
+        android:textSize="22sp"
+        android:textColor="@android:color/black"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView" android:layout_marginBottom="20dp"/>
+
+    <Button
+        android:text="Interview"
+        android:textAlignment="textStart"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:id="@+id/interview"
+        android:layout_marginBottom="10dp"
+        />
+
+    <Button
+        android:text="Presentation"
+        android:textAlignment="textStart"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:id="@+id/presentation"
+        android:layout_marginBottom="10dp"/>
+
+    <Button
+        android:text="Roleplay"
+        android:textAlignment="textStart"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:id="@+id/roleplay"
+        android:layout_marginBottom="10dp" />
+
+
+</LinearLayout>

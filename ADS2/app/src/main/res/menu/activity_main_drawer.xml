@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_tests"
+            android:icon="@drawable/ic_menu_test"
+            android:title="My Tests Centers" />
+        <item
+            android:id="@+id/nav_acs"
+            android:icon="@drawable/ic_menu_acs"
+            android:title="My Assessment Centers" />
+        <item
+            android:id="@+id/nav_logout"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:title="Logout" />
+
+    </group>
+
+    <item android:title="Support">
+        <menu>
+            <item
+                android:id="@+id/nav_phone_us"
+                android:icon="@drawable/ic_menu_phone"
+                android:title="Call service desk" />
+            <item
+                android:id="@+id/nav_email_us"
+                android:icon="@drawable/ic_menu_mail"
+                android:title="Email us" />
+        </menu>
+    </item>
+
+</menu>
