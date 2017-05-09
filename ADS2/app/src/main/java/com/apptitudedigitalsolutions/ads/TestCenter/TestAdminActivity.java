@@ -67,6 +67,8 @@ public class TestAdminActivity extends Activity {
     String []mTEST_SECTION_DELIMITER_TAGS;
     int mCURRECT_SECTION_INDEX_IN_DELIMIERTS_ARRAY;
 
+    String NEXT_SECTION_TITLE;
+
     JSONArray participantsJSONArray = new JSONArray();
     DatabaseHelper db;
     /**
@@ -81,9 +83,11 @@ public class TestAdminActivity extends Activity {
         requestQueue = Volley.newRequestQueue(TestAdminActivity.this);
         getServerTime();
 
+        getCurrentTestInfo();
+
         //mTEST_SECTION_DELIMITERS
-        mTEST_SECTION_DELIMITERS=appState.TEST_SECTIONS.split(",");
-        mTEST_SECTION_DELIMITER_TAGS=appState.TEST_SECTIONS_TAGS.split(",");
+//        mTEST_SECTION_DELIMITERS=appState.TEST_SECTIONS.split(",");
+//        mTEST_SECTION_DELIMITER_TAGS=appState.TEST_SECTIONS_TAGS.split(",");
 
         Log.e("ADS", "USER : " + appState.USERNAME);
         Log.e("ADS", "PASSCODE : " + appState.PASSCODE );
@@ -107,11 +111,45 @@ public class TestAdminActivity extends Activity {
         mAdapter = new TestAdminActivity.MyAdapter(participantsJSONArray);
         mRecyclerView.setAdapter(mAdapter);
         getParticipants();
+
+       // getActionBar().setTitle("Hello world App");
+       // getSupportActionBar().setTitle("Hello world App");
     }
 
+    public void getCurrentTestInfo(){
 
+        String URL = "https://"+ appState.ENDPOINT + "/v1/companies/test/info/" +  appState.TEST_ID;
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("username", appState.USERNAME);
+        params.put("passcode", appState.PASSCODE);
+
+        JsonObjectRequest request_json = new JsonObjectRequest(URL, new JSONObject(params),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        JSONObject Info = new JSONObject();
+                        try {
+                            Info = response.getJSONObject("info");
+                            NEXT_SECTION_TITLE = Info.getString("next_section_title");
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                VolleyLog.e("Error: ", error.getMessage());
+            }
+        });
+
+        //RequestQueue requestQueue = Volley.newRequestQueue(TestAdminActivity.this);
+        request_json.setShouldCache(false);
+        requestQueue.add(request_json);
+
+    }
     public void getParticipants(){
-        String URL = "http://"+ appState.ENDPOINT + "/v1/companies/test/participants/" +  appState.TEST_ID;
+        String URL = "https://"+ appState.ENDPOINT + "/v1/companies/test/participants/" +  appState.TEST_ID;
 
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("username", appState.USERNAME);
@@ -124,6 +162,8 @@ public class TestAdminActivity extends Activity {
 
                         try {
                             participantsJSONArray = response.getJSONArray("candidates");
+                            TextView lame= (TextView) findViewById(R.id.participants_count);
+                            lame.setText("Total participants : " + participantsJSONArray.length());
                             mAdapter.notifyDataSetChanged();
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -146,23 +186,25 @@ public class TestAdminActivity extends Activity {
         final AlertDialog.Builder alert = new AlertDialog.Builder(this);
         alert.setCancelable(false);
 
-        alert.setMessage("Are you sure you want to START the test from section : " + mTEST_SECTION_DELIMITER_TAGS[0]);
+        alert.setMessage("Are you sure you want to START the test from section : " + NEXT_SECTION_TITLE);
         alert.setTitle("START test");
 
         alert.setPositiveButton("Start", new DialogInterface.OnClickListener() {
             public void onClick(final DialogInterface dialog, int whichButton) {
 
-                String URL = "http://"+ appState.ENDPOINT + "/v1/companies/test/set/" +  appState.TEST_ID;
+//                String URL = "https://"+ appState.ENDPOINT + "/v1/companies/test/set/" +  appState.TEST_ID;
+                String URL = "https://"+ appState.ENDPOINT + "/v2/companies/test/set/" +  appState.TEST_ID;
 
                 HashMap<String, String> params = new HashMap<String, String>();
                 params.put("username", appState.USERNAME);
                 params.put("passcode", appState.PASSCODE);
-                params.put("page_number",mTEST_SECTION_DELIMITERS[0]);
-                mCURRECT_SECTION_INDEX_IN_DELIMIERTS_ARRAY = 0;
+                params.put("action","start");
+//                params.put("page_number",mTEST_SECTION_DELIMITERS[0]);
+//                mCURRECT_SECTION_INDEX_IN_DELIMIERTS_ARRAY = 0;
                 JsonObjectRequest request_json = new JsonObjectRequest(URL, new JSONObject(params), new Response.Listener<JSONObject>() {
                             @Override
                             public void onResponse(JSONObject response) {
-
+                                getCurrentTestInfo();
                             }
                         }, new Response.ErrorListener() {
                     @Override
@@ -188,28 +230,30 @@ public class TestAdminActivity extends Activity {
 
 
 
-    public void stopTest(){
+    public void completeTest(View v){
         final AlertDialog.Builder alert = new AlertDialog.Builder(this);
         alert.setCancelable(false);
 
-        alert.setMessage("Are you sure you want to STOP the test");
+        alert.setMessage("Are you sure you want to complete the test. This stops the test and emails the results to you");
         alert.setTitle("STOP test");
 
         alert.setPositiveButton("Start", new DialogInterface.OnClickListener() {
             public void onClick(final DialogInterface dialog, int whichButton) {
 
-
-                String URL = "http://"+ appState.ENDPOINT + "/v1/companies/test/set/" +  appState.TEST_ID;
+//                String URL = "https://"+ appState.ENDPOINT + "/v1/companies/test/set/" +  appState.TEST_ID;
+                String URL = "https://"+ appState.ENDPOINT + "/v2/companies/test/set/" +  appState.TEST_ID;
 
                 HashMap<String, String> params = new HashMap<String, String>();
                 params.put("username", appState.USERNAME);
                 params.put("passcode", appState.PASSCODE);
-                params.put("page_number",mTEST_SECTION_DELIMITERS[mTEST_SECTION_DELIMITERS.length-1]);
-                mCURRECT_SECTION_INDEX_IN_DELIMIERTS_ARRAY = mTEST_SECTION_DELIMITERS.length-1;
+                params.put("action","complete");
+//                params.put("page_number",mTEST_SECTION_DELIMITERS[mTEST_SECTION_DELIMITERS.length-1]);
+//                params.put("testEndFlag","true");
+//                mCURRECT_SECTION_INDEX_IN_DELIMIERTS_ARRAY = mTEST_SECTION_DELIMITERS.length-1;
                 JsonObjectRequest request_json = new JsonObjectRequest(URL, new JSONObject(params), new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-
+                        getCurrentTestInfo();
                     }
                 }, new Response.ErrorListener() {
                     @Override
@@ -232,34 +276,93 @@ public class TestAdminActivity extends Activity {
 
         alert.show();
     }
+
+
+
+
+
+    public void resetTest(View v){
+        final AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setCancelable(false);
+
+        alert.setMessage("Are you sure you want to Reset the test. This will take all participants tablets back to the launch screen");
+        alert.setTitle("Reset Test");
+
+        alert.setPositiveButton("Reset", new DialogInterface.OnClickListener() {
+            public void onClick(final DialogInterface dialog, int whichButton) {
+
+
+//                String URL = "https://"+ appState.ENDPOINT + "/v1/companies/test/reset/" +  appState.TEST_ID;
+                String URL = "https://"+ appState.ENDPOINT + "/v2/companies/test/set/" +  appState.TEST_ID;
+
+                HashMap<String, String> params = new HashMap<String, String>();
+                params.put("username", appState.USERNAME);
+                params.put("passcode", appState.PASSCODE);
+                params.put("action","reset");
+//                params.put("page_number",mTEST_SECTION_DELIMITERS[mTEST_SECTION_DELIMITERS.length-1]);
+//                mCURRECT_SECTION_INDEX_IN_DELIMIERTS_ARRAY = mTEST_SECTION_DELIMITERS.length-1;
+//                appState.CURRENT_TEST_SECTION_SLIDE_INDEX_NUMBER = 0;
+
+                JsonObjectRequest request_json = new JsonObjectRequest(URL, new JSONObject(params), new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        getCurrentTestInfo();
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        VolleyLog.e("Error: ", error.getMessage());
+                    }
+                });
+
+                RequestQueue requestQueue = Volley.newRequestQueue(TestAdminActivity.this);
+                request_json.setShouldCache(false);
+                requestQueue.add(request_json);
+            }
+        });
+
+        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                // what ever you want to do with No option.
+            }
+        });
+
+        alert.show();
+    }
+
+
+
+
 
     public void nextSection(View v){
         final AlertDialog.Builder alert = new AlertDialog.Builder(this);
         alert.setCancelable(false);
 
 
-        alert.setMessage("Are you sure you want to Start the next section : " + mCURRECT_SECTION_INDEX_IN_DELIMIERTS_ARRAY+1);
-        alert.setTitle("STOP test");
+        alert.setMessage("Are you sure you want to Start the next section : " + NEXT_SECTION_TITLE);
+        alert.setTitle("Next Section");
 
 
         alert.setPositiveButton("Start", new DialogInterface.OnClickListener() {
             public void onClick(final DialogInterface dialog, int whichButton) {
 
-                String URL = "http://"+ appState.ENDPOINT + "/v1/companies/test/set/" +  appState.TEST_ID;
+//                String URL = "https://"+ appState.ENDPOINT + "/v1/companies/test/set/" +  appState.TEST_ID;
+                String URL = "https://"+ appState.ENDPOINT + "/v2/companies/test/set/" +  appState.TEST_ID;
 
                 HashMap<String, String> params = new HashMap<String, String>();
                 params.put("username", appState.USERNAME);
                 params.put("passcode", appState.PASSCODE);
-                params.put("page_number",mTEST_SECTION_DELIMITERS[appState.CURRENT_TEST_SECTION_SLIDE_INDEX_NUMBER+1]);
-                appState.CURRENT_TEST_SECTION_SLIDE_INDEX_NUMBER++;
+                params.put("action","next");
+//                params.put("action",mTEST_SECTION_DELIMITERS[appState.CURRENT_TEST_SECTION_SLIDE_INDEX_NUMBER+1]);
+//                appState.CURRENT_TEST_SECTION_SLIDE_INDEX_NUMBER++;
 
-                TextView lame= (TextView) findViewById(R.id.participants_count);
-                lame.setText(mTEST_SECTION_DELIMITERS[appState.CURRENT_TEST_SECTION_SLIDE_INDEX_NUMBER]);
+//                TextView lame= (TextView) findViewById(R.id.participants_count);
+//                lame.setText("Total participants : " + mTEST_SECTION_DELIMITERS[appState.CURRENT_TEST_SECTION_SLIDE_INDEX_NUMBER]);
 
                 JsonObjectRequest request_json = new JsonObjectRequest(URL, new JSONObject(params), new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-
+                        getCurrentTestInfo();
                     }
                 }, new Response.ErrorListener() {
                     @Override
@@ -285,32 +388,14 @@ public class TestAdminActivity extends Activity {
     }
 
 
-    public void startSection(View v){
-        String URL = "http://"+ appState.ENDPOINT + "/v1/companies/test/startsection/" +  appState.TEST_ID;
 
-        HashMap<String, String> params = new HashMap<String, String>();
-        params.put("username", appState.USERNAME);
-        params.put("passcode", appState.PASSCODE);
 
-        JsonObjectRequest request_json = new JsonObjectRequest(URL, new JSONObject(params), new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
 
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                VolleyLog.e("Error: ", error.getMessage());
-            }
-        });
 
-        RequestQueue requestQueue = Volley.newRequestQueue(TestAdminActivity.this);
-        request_json.setShouldCache(false);
-        requestQueue.add(request_json);
-    }
+
 
     public void getServerTime(){
-        String URL = "http://"+ appState.ENDPOINT + "/v1/time";
+        String URL = "https://"+ appState.ENDPOINT + "/v1/time";
 
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("username", appState.USERNAME);
@@ -532,7 +617,7 @@ public class TestAdminActivity extends Activity {
         alert.setPositiveButton("Add", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
 
-                String URL = "http://"+ appState.ENDPOINT + "/v1/companies/test/"+ appState.TEST_ID+"/participants/add";
+                String URL = "https://"+ appState.ENDPOINT + "/v1/companies/test/"+ appState.TEST_ID+"/participants/add";
 
                 HashMap<String, String> params = new HashMap<String, String>();
                 params.put("username", appState.USERNAME);

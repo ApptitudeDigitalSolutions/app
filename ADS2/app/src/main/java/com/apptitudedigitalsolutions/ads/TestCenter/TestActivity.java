@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
+import android.text.util.Linkify;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -28,6 +29,8 @@ import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.apptitudedigitalsolutions.ads.Application.ADSApplication;
+import com.apptitudedigitalsolutions.ads.Landing.LandingActivity;
+import com.apptitudedigitalsolutions.ads.Main.MainActivity;
 import com.apptitudedigitalsolutions.ads.R;
 import com.squareup.picasso.Picasso;
 
@@ -36,6 +39,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import android.os.Handler;
 
@@ -74,6 +78,7 @@ public class TestActivity extends Activity {
     String mOther;
     String tappedAnswer;
     JSONArray testIntroJSONObject;
+    ArrayList<String> SELECTED_ANSWERS = new ArrayList<String>();
 
 
     private RecyclerView mRecyclerView;
@@ -83,6 +88,8 @@ public class TestActivity extends Activity {
     LinearLayout imc_Layout;
     LinearLayout smc_Layout;
     LinearLayout vt_Layout;
+
+    private RequestQueue requestQueue;
     /**
      * Called when the activity is first created.
      */
@@ -92,11 +99,13 @@ public class TestActivity extends Activity {
         setContentView(R.layout.activity_test_intro);
         Log.d(msg, "The onCreate() event");
 
+        requestQueue = Volley.newRequestQueue(TestActivity.this);
+
         ImageView im = (ImageView) findViewById(R.id.client_icon);
-        Picasso.with(this).load("http://"+ "35.160.158.110:8080" + "/" +  appState.TEST_ID + "/client_icon.png").into(im);
+        Picasso.with(this).load("https://"+ "adsapp.eu" + "/" +  appState.TEST_ID + "/client_icon.png").into(im);
 
         ImageView is = (ImageView) findViewById(R.id.company_icon);
-        Picasso.with(this).load("http://"+ "35.160.158.110:8080" + "/" +  appState.TEST_ID + "/company_icon.png").into(is);
+        Picasso.with(this).load("https://"+ "adsapp.eu" + "/" +  appState.TEST_ID + "/company_icon.png").into(is);
 
 
         // get the test info
@@ -244,10 +253,25 @@ public class TestActivity extends Activity {
             View v1 = getWindow().getDecorView().getRootView();
             showAddParticipant(v1);
         }
+
+
+
     }
 
     public void previous(View v){
         if(mCURRENT_TEST_PAGE_POINTER >= 0) {
+
+            if(mCURRENT_MACO_SECTION_TAG.equals("test")) {
+                int lastQuestionNumber = mCURRENT_QUESTION;
+                if(tappedAnswer.equals("")){
+
+                }else {
+                    SELECTED_ANSWERS.set(mCURRENT_TEST_PAGE_POINTER, tappedAnswer);
+                    sendAnswer(tappedAnswer, lastQuestionNumber, mCURRENT_SECTION, mCURRENT_CORRECT_ANSWER);
+                }
+                tappedAnswer = "";
+            }
+
             mCURRENT_QUESTION--;
             mCURRENT_TEST_PAGE_POINTER--;
 
@@ -293,6 +317,17 @@ public class TestActivity extends Activity {
         if(mCURRENT_TEST_PAGE_POINTER < mPAGES_COUNT){
             mCURRENT_QUESTION++;
 
+            if(mCURRENT_MACO_SECTION_TAG.equals("test")) {
+                int lastQuestionNumber = mCURRENT_QUESTION - 1;
+                if(tappedAnswer.equals("")){
+
+                }else {
+                    SELECTED_ANSWERS.set(mCURRENT_TEST_PAGE_POINTER, tappedAnswer);
+                    sendAnswer(tappedAnswer, lastQuestionNumber, mCURRENT_SECTION, mCURRENT_CORRECT_ANSWER);
+                }
+                tappedAnswer = "";
+            }
+
             mCURRENT_TEST_PAGE_POINTER++;
             JSONObject newJsonObject = new JSONObject();
             try {
@@ -336,11 +371,7 @@ public class TestActivity extends Activity {
             Button i_as4 = (Button) findViewById(R.id.i_answer_4);
             i_as4.getBackground().clearColorFilter();
 
-            if(mCURRENT_MACO_SECTION_TAG.equals("test")) {
-                int lastQuestionNumber = mCURRENT_QUESTION - 1;
-                sendAnswer(tappedAnswer, lastQuestionNumber, mCURRENT_SECTION, mCURRENT_CORRECT_ANSWER);
-                tappedAnswer = "";
-            }
+
 
 //            if(mCURRENT_TEST_PAGE_POINTER == mPAGES_COUNT || mCURRENT_TEST_PAGE_POINTER == mCURRENT_MAX_PAGE_POINTER ){
 //                v.setVisibility(View.INVISIBLE);
@@ -356,9 +387,9 @@ public class TestActivity extends Activity {
 
     }
 
-    public void sendAnswer(String answer,int question_number , int section_number,String correct_answer){
+    public void sendAnswer(String answer , int question_number , int section_number,String correct_answer){
         // make resquest
-        String URL = "http://"+ "35.160.158.110:8080" + "/v1/companies/test/answer/" +  appState.TEST_ID;
+        String URL = "https://"+ "adsapp.eu" + "/v1/companies/test/answer/" +  appState.TEST_ID;
 
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("answer", answer);
@@ -380,16 +411,16 @@ public class TestActivity extends Activity {
             }
         });
 
-        RequestQueue requestQueue = Volley.newRequestQueue(TestActivity.this);
+//        RequestQueue requestQueue = Volley.newRequestQueue(TestActivity.this);
         request_json.setShouldCache(false);
         requestQueue.add(request_json);
 
     }
 
     public void getGetTestInto(){
-        // make resquest
-        String URL = "http://"+ "35.160.158.110:8080" + "/v1/companies/tests/" +  appState.TEST_ID + "/intro";
 
+        // make resquest
+        String URL = "https://"+ "adsapp.eu" + "/v1/companies/tests/" +  appState.TEST_ID + "/intro";
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("candidate_email", mCandidateEmail);
         params.put("is_admin", "0");
@@ -409,6 +440,7 @@ public class TestActivity extends Activity {
                                 String pageType = item.getString("macro_section_type");
                                 String layoutType = item.getString("answer_type");
                                 int section_under_inspection = item.getInt("section_id");
+                                SELECTED_ANSWERS.add("");
 
                                 if(mCURRENT_SECTION == section_under_inspection){
 
@@ -443,7 +475,7 @@ public class TestActivity extends Activity {
             }
         });
 
-        RequestQueue requestQueue = Volley.newRequestQueue(TestActivity.this);
+//        RequestQueue requestQueue = Volley.newRequestQueue(TestActivity.this);
         request_json.setShouldCache(false);
         requestQueue.add(request_json);
         // Call for layout refresh.
@@ -452,8 +484,25 @@ public class TestActivity extends Activity {
 
     public void statusCheck(){
         Log.v("ADS","Status Check");
+        final Handler handler = new Handler();
 
-        String URL = "http://"+ "35.160.158.110:8080" + "/v1/companies/test/"+ appState.TEST_ID+"/status";
+        if(appState.BACK_TO_LOGIN == true){
+
+            appState.TEST_ID = ""; // This is set in the landing activity and then loaded locally from there.
+            appState.TEST_TITLE= "";
+            appState.TEST_DATE= "";
+            appState.TEST_DESC= "";
+
+            appState.TEST_SECTIONS= "";
+            appState.TEST_SECTIONS_TAGS= "";
+
+            appState.CURRENT_TEST_SECTION_SLIDE_INDEX_NUMBER = 0;
+
+            Intent intent = new Intent(this.getApplicationContext(), LandingActivity.class);
+            startActivity(intent);
+        }
+
+        String URL = "https://"+ "adsapp.eu" + "/v1/companies/test/"+ appState.TEST_ID+"/status";
         Log.v("ADS", "URL is  .. " + URL);
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("candidate_email", mCandidateEmail);
@@ -493,7 +542,6 @@ public class TestActivity extends Activity {
                                     if(item.getInt("id") == testPageID){
                                         desired_section = item.getInt("section_id");
                                         section_tag = item.getString("macro_section_type");
-
                                     }
 
                                     // get id of last page in section
@@ -593,11 +641,11 @@ public class TestActivity extends Activity {
             }
         });
 
-        RequestQueue requestQueue = Volley.newRequestQueue(TestActivity.this);
+//        RequestQueue requestQueue = Volley.newRequestQueue(TestActivity.this);
         request_json.setShouldCache(false);
         requestQueue.add(request_json);
 
-        final Handler handler = new Handler();
+
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -667,7 +715,7 @@ public class TestActivity extends Activity {
         alert.setPositiveButton("Add", new DialogInterface.OnClickListener() {
             public void onClick(final DialogInterface dialog, int whichButton) {
 
-                String URL = "http://"+ "35.160.158.110:8080" + "/v1/companies/test/"+ appState.TEST_ID+"/participants/add";
+                String URL = "https://"+ "adsapp.eu" + "/v1/companies/test/"+ appState.TEST_ID+"/participants/add";
 
                 HashMap<String, String> params = new HashMap<String, String>();
 
@@ -682,8 +730,9 @@ public class TestActivity extends Activity {
                 params.put("last", String.valueOf(last.getText()));
                 params.put("email", String.valueOf(email.getText()));
                 params.put("dob", String.valueOf(dob.getText()));
-//                params.put("other", String.valueOf(other.getText()));
-
+                if(appState.TOKEN != null) {
+                    params.put("token", appState.TOKEN);
+                }
 
                 JsonObjectRequest request_json = new JsonObjectRequest(URL, new JSONObject(params), new Response.Listener<JSONObject>() {
                     @Override
@@ -703,7 +752,7 @@ public class TestActivity extends Activity {
                     }
                 });
 
-                RequestQueue requestQueue = Volley.newRequestQueue(TestActivity.this);
+//                RequestQueue requestQueue = Volley.newRequestQueue(TestActivity.this);
                 request_json.setShouldCache(false);
                 requestQueue.add(request_json);
 
@@ -780,262 +829,369 @@ public class TestActivity extends Activity {
         JSONObject page = new JSONObject();
         try {
 
-            page = testIntroJSONObject.getJSONObject(mCURRENT_TEST_PAGE_POINTER);
-            Log.e("ADS", String.valueOf(page));
+            if(testIntroJSONObject != null) {
 
-            mCURRENT_TEST_PAGE_POINTER = page.getInt("id")-1;
-            mCURRENT_QUESTION = page.getInt("question_id");
-            mCURRENT_SECTION = page.getInt("section_id");
-            String section_title = page.getString("section_title");
-            String section_text = page.getString("section_text");
-            String test_info_ref = page.getString("test_info_ref");
-            String section_media_url = page.getString("section_media_url");
-            String section_media_type = page.getString("section_media_type");
-           int section_question_count = 0;
-            if(page.isNull("section_question_count")){
-                int j = 0;
-                section_question_count = j;
-            }else {
-                int j = page.getInt("section_question_count");
-                section_question_count = j;
-            }
-            String question = page.getString("question");
-            String question_media_url = page.getString("question_media_url");
-            String question_media_type = page.getString("question_media_type");
-            String answer_type = page.getString("answer_type");
-            String answer_options = page.getString("answer_options");
-            String answer_catergories = page.getString("answer_catergories");
-            String correct_answer = page.getString("correct_answer");
-            String macro_section_type = page.getString("macro_section_type");
-            int time_allowed_in_section;
-            if(page.isNull("time_allowed_in_section")) {
-                time_allowed_in_section = 0;
-            }else{
-                time_allowed_in_section = page.getInt("time_allowed_in_section");
-            }
-            String test_results_file_ref = page.getString("test_results_file_ref");
-            mCURRENT_CORRECT_ANSWER = correct_answer;
 
-            LinearLayout testHUD = (LinearLayout) findViewById(R.id.info_bar);
-            int visibility = testHUD.getVisibility();
+                page = testIntroJSONObject.getJSONObject(mCURRENT_TEST_PAGE_POINTER);
+                Log.e("ADS", String.valueOf(page));
 
-            if(macro_section_type.equals("test") && (answer_type.equals("smc") || answer_type.equals("imc"))){
-                // we need to set up and show the test HUD
-                testHUD.setVisibility(View.VISIBLE);
-
-                // set title
-                TextView title = (TextView) findViewById(R.id.section_title);
-                title.setText(section_title);
-
-                // set question number
-                TextView questionNumber = (TextView) findViewById(R.id.question_number);
-                int testPagesMinusLast = mCOUNT_OF_PAGES_IN_TEST_MAIN ;
-                questionNumber.setText("Question " + mCURRENT_QUESTION + "/" + testPagesMinusLast);
-
-                // hide section number
-
-                // set time limit
-                Integer intObj = new Integer(time_allowed_in_section);
-                Number numObj = (Number)intObj;
-                BigDecimal big = new BigDecimal(numObj.toString());
-
-                int[] compoents = splitToComponentTimes(big);
-                Log.v("ADS", "The Time In this section is = " + compoents);
-
-                TextView timeAllowed = (TextView) findViewById(R.id.time_allowed);
-                timeAllowed.setText("Time Allowed : " + compoents[1] + "mins");
-
-                if((visibility == View.GONE || visibility == View.INVISIBLE) && mTIMER_HAS_BEEN_STARTED == 0){
-                    // this means the counter needs to start firing. othervise there is no need to start the method (danger of haveing multiple concurrent methods running otherwise
-                    updateTimeTaken();
+                mCURRENT_TEST_PAGE_POINTER = page.getInt("id") - 1;
+                mCURRENT_QUESTION = page.getInt("question_id");
+                mCURRENT_SECTION = page.getInt("section_id");
+                String section_title = page.getString("section_title");
+                String section_text = page.getString("section_text");
+                String test_info_ref = page.getString("test_info_ref");
+                String section_media_url = page.getString("section_media_url");
+                String section_media_type = page.getString("section_media_type");
+                int section_question_count = 0;
+                if (page.isNull("section_question_count")) {
+                    int j = 0;
+                    section_question_count = j;
+                } else {
+                    int j = page.getInt("section_question_count");
+                    section_question_count = j;
                 }
+                String question = page.getString("question");
+                String question_media_url = page.getString("question_media_url");
+                String question_media_type = page.getString("question_media_type");
+                String answer_type = page.getString("answer_type");
+                String answer_options = page.getString("answer_options");
+                String answer_catergories = page.getString("answer_catergories");
+                String correct_answer = page.getString("correct_answer");
+                String macro_section_type = page.getString("macro_section_type");
+                int time_allowed_in_section;
+                if (page.isNull("time_allowed_in_section")) {
+                    time_allowed_in_section = 0;
+                } else {
+                    time_allowed_in_section = page.getInt("time_allowed_in_section");
+                }
+                String test_results_file_ref = page.getString("test_results_file_ref");
+                mCURRENT_CORRECT_ANSWER = correct_answer;
 
-                // set up counter with method
-            }else {
-                testHUD.setVisibility(View.GONE);
-            }
+                LinearLayout testHUD = (LinearLayout) findViewById(R.id.info_bar);
+                int visibility = testHUD.getVisibility();
 
-            mCURRENT_MACO_SECTION_TAG = macro_section_type;
+                if (macro_section_type.equals("test") && (answer_type.equals("smc") || answer_type.equals("imc"))) {
+                    // we need to set up and show the test HUD
+                    testHUD.setVisibility(View.VISIBLE);
 
-            //What kind of layout is it that we are looking at for this question
-            if(answer_type.equals("ip")){
-                // set all other layouts to gone and ip == visible
-                ip_Layout.setVisibility(View.VISIBLE);
-                imc_Layout.setVisibility(View.GONE);
-                smc_Layout.setVisibility(View.GONE);
-                vt_Layout.setVisibility(View.GONE);
+                    // set title
+                    TextView title = (TextView) findViewById(R.id.section_title);
+                    title.setText(section_title);
 
-                TextView title = (TextView) findViewById(R.id.info_panel_title);
-                title.setText(section_title);
+                    // set question number
+                    TextView questionNumber = (TextView) findViewById(R.id.question_number);
+                    int testPagesMinusLast = mCOUNT_OF_PAGES_IN_TEST_MAIN;
+                    questionNumber.setText("Question " + mCURRENT_QUESTION + "/" + testPagesMinusLast);
 
-                TextView message = (TextView) findViewById(R.id.info_panel_message);
-                message.setText(section_text);
+                    // hide section number
 
-            }
+                    // set time limit
+                    Integer intObj = new Integer(time_allowed_in_section);
+                    Number numObj = (Number) intObj;
+                    BigDecimal big = new BigDecimal(numObj.toString());
 
-            if(answer_type.equals("vt")){
-                ip_Layout.setVisibility(View.GONE);
-                imc_Layout.setVisibility(View.GONE);
-                smc_Layout.setVisibility(View.GONE);
-                vt_Layout.setVisibility(View.VISIBLE);
+                    int[] compoents = splitToComponentTimes(big);
+                    Log.v("ADS", "The Time In this section is = " + compoents);
 
-                TextView videoTitle = (TextView) findViewById(R.id.video_title);
-                videoTitle.setText(section_title);
+                    TextView timeAllowed = (TextView) findViewById(R.id.time_allowed);
+                    timeAllowed.setText("Time Allowed : " + compoents[1] + "mins");
 
-
-                TextView videoText = (TextView) findViewById(R.id.video_descriptor);
-                videoText.setText(section_text);
-
-                final VideoView vid = (VideoView) findViewById(R.id.videoView);
-                Uri vidUri = Uri.parse(section_media_url);
-                vid.setMediaController(new MediaController(this));
-                vid.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                    @Override
-                    public void onPrepared(MediaPlayer mp) {
-                        vid.start();
+                    if ((visibility == View.GONE || visibility == View.INVISIBLE) && mTIMER_HAS_BEEN_STARTED == 0) {
+                        // this means the counter needs to start firing. othervise there is no need to start the method (danger of haveing multiple concurrent methods running otherwise
+                        updateTimeTaken();
                     }
-                });
-                vid.setVideoURI(vidUri);
+
+                    // set up counter with method
+                } else {
+                    testHUD.setVisibility(View.GONE);
+                }
+
+                mCURRENT_MACO_SECTION_TAG = macro_section_type;
+
+                //What kind of layout is it that we are looking at for this question
+                if (answer_type.equals("ip")) {
+                    // set all other layouts to gone and ip == visible
+                    ip_Layout.setVisibility(View.VISIBLE);
+                    imc_Layout.setVisibility(View.GONE);
+                    smc_Layout.setVisibility(View.GONE);
+                    vt_Layout.setVisibility(View.GONE);
+
+                    TextView title = (TextView) findViewById(R.id.info_panel_title);
+                    title.setText(section_title);
+
+                    TextView message = (TextView) findViewById(R.id.info_panel_message);
+                    message.setText(section_text);
+                    Linkify.addLinks(message, Linkify.ALL);
+
+                }
+
+                if (answer_type.equals("vt")) {
+                    ip_Layout.setVisibility(View.GONE);
+                    imc_Layout.setVisibility(View.GONE);
+                    smc_Layout.setVisibility(View.GONE);
+                    vt_Layout.setVisibility(View.VISIBLE);
+
+                    TextView videoTitle = (TextView) findViewById(R.id.video_title);
+                    videoTitle.setText(section_title);
+
+
+                    TextView videoText = (TextView) findViewById(R.id.video_descriptor);
+                    videoText.setText(section_text);
+
+                    final VideoView vid = (VideoView) findViewById(R.id.videoView);
+                    Uri vidUri = Uri.parse(section_media_url);
+                    vid.setMediaController(new MediaController(this));
+                    vid.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                        @Override
+                        public void onPrepared(MediaPlayer mp) {
+                            vid.start();
+                        }
+                    });
+                    vid.setVideoURI(vidUri);
+                }
+
+                if (answer_type.equals("smc")) {
+                    ip_Layout.setVisibility(View.GONE);
+                    imc_Layout.setVisibility(View.GONE);
+                    smc_Layout.setVisibility(View.VISIBLE);
+                    vt_Layout.setVisibility(View.GONE);
+                    // split answers string into array
+                    String[] items = answer_options.split("@&@");
+
+                    Button questionText = (Button) findViewById(R.id.question_text);
+                    questionText.setText(question);
+
+                    int indexOfCorrectAnswer = getArrayIndex(items, correct_answer);
+                    if (items.length == 4) {
+                        Button as1 = (Button) findViewById(R.id.answer_1);
+                        as1.setText(items[0]);
+                        if (indexOfCorrectAnswer == 0 && macro_section_type.equals("intro")) {
+                            as1.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+                        // if the anser to go in this cell == the answer at the questions index
+
+                        if(items[0].equals(SELECTED_ANSWERS.get(mCURRENT_TEST_PAGE_POINTER))){
+                            as1.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+
+                        Button as2 = (Button) findViewById(R.id.answer_2);
+                        as2.setText(items[1]);
+                        if (indexOfCorrectAnswer == 1 && macro_section_type.equals("intro")) {
+                            as2.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+                        // if the anser to go in this cell == the answer at the questions index
+                        if(items[1].equals(SELECTED_ANSWERS.get(mCURRENT_TEST_PAGE_POINTER))){
+                            as2.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+
+                        Button as3 = (Button) findViewById(R.id.answer_3);
+                        as3.setText(items[2]);
+                        if (indexOfCorrectAnswer == 2 && macro_section_type.equals("intro")) {
+                            as3.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+                        // if the anser to go in this cell == the answer at the questions index
+                        if(items[2].equals(SELECTED_ANSWERS.get(mCURRENT_TEST_PAGE_POINTER))){
+                            as3.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+
+
+                        Button as4 = (Button) findViewById(R.id.answer_4);
+                        as4.setText(items[3]);
+                        if (indexOfCorrectAnswer == 3 && macro_section_type.equals("intro")) {
+                            as4.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+                        // if the anser to go in this cell == the answer at the questions index
+                        if(items[3].equals(SELECTED_ANSWERS.get(mCURRENT_TEST_PAGE_POINTER))){
+                            as4.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+
+                    }
+
+                    if (items.length == 3) {
+                        Button as1 = (Button) findViewById(R.id.answer_1);
+                        as1.setText(items[0]);
+                        if (indexOfCorrectAnswer == 0 && macro_section_type.equals("intro")) {
+                            as1.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+                        // if the anser to go in this cell == the answer at the questions index
+                        if(items[0].equals(SELECTED_ANSWERS.get(mCURRENT_TEST_PAGE_POINTER))){
+                            as1.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+
+                        Button as2 = (Button) findViewById(R.id.answer_2);
+                        as2.setText(items[1]);
+                        if (indexOfCorrectAnswer == 1 && macro_section_type.equals("intro")) {
+                            as2.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+                        // if the anser to go in this cell == the answer at the questions index
+                        if(items[1].equals(SELECTED_ANSWERS.get(mCURRENT_TEST_PAGE_POINTER))){
+                            as2.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+
+                        Button as3 = (Button) findViewById(R.id.answer_3);
+                        as3.setText(items[2]);
+                        if (indexOfCorrectAnswer == 2 && macro_section_type.equals("intro")) {
+                            as3.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+                        // if the anser to go in this cell == the answer at the questions index
+                        if(items[2].equals(SELECTED_ANSWERS.get(mCURRENT_TEST_PAGE_POINTER))){
+                            as3.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+
+                        Button as4 = (Button) findViewById(R.id.answer_4);
+                        as4.setVisibility(View.GONE);
+                    }
+
+
+                    if (items.length == 2) {
+                        Button as1 = (Button) findViewById(R.id.answer_1);
+                        as1.setText(items[0]);
+                        if (indexOfCorrectAnswer == 0 && macro_section_type.equals("intro")) {
+                            as1.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+                        // if the anser to go in this cell == the answer at the questions index
+                        if(items[0].equals(SELECTED_ANSWERS.get(mCURRENT_TEST_PAGE_POINTER))){
+                            as1.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+
+                        Button as2 = (Button) findViewById(R.id.answer_2);
+                        as2.setText(items[1]);
+                        if (indexOfCorrectAnswer == 1 && macro_section_type.equals("intro")) {
+                            as2.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+                        // if the anser to go in this cell == the answer at the questions index
+                        if(items[2].equals(SELECTED_ANSWERS.get(mCURRENT_TEST_PAGE_POINTER))){
+                            as2.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+
+                        Button as3 = (Button) findViewById(R.id.answer_3);
+                        as3.setVisibility(View.GONE);
+
+                        Button as4 = (Button) findViewById(R.id.answer_4);
+                        as4.setVisibility(View.GONE);
+                    }
+
+
+                }
+                if (answer_type.equals("imc")) {
+                    ip_Layout.setVisibility(View.GONE);
+                    imc_Layout.setVisibility(View.VISIBLE);
+                    smc_Layout.setVisibility(View.GONE);
+                    vt_Layout.setVisibility(View.GONE);
+
+
+                    String[] items = answer_options.split("@&@");
+
+                    TextView questionText = (TextView) findViewById(R.id.i_question_text);
+                    questionText.setText(question);
+
+
+                    ImageView im = (ImageView) findViewById(R.id.question_image);
+                    Picasso.with(this).load("https://" + "adsapp.eu" + "/" + appState.TEST_ID + "/" + question_media_url).into(im);
+
+                    int indexOfCorrectAnswer = getArrayIndex(items, correct_answer);
+                    if (items.length == 4) {
+                        Button as1 = (Button) findViewById(R.id.i_answer_1);
+                        as1.setText(items[0]);
+                        if (indexOfCorrectAnswer == 0 && macro_section_type.equals("intro")) {
+                            as1.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+                        if(items[0].equals(SELECTED_ANSWERS.get(mCURRENT_TEST_PAGE_POINTER))){
+                            as1.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+
+                        Button as2 = (Button) findViewById(R.id.i_answer_2);
+                        as2.setText(items[1]);
+                        if (indexOfCorrectAnswer == 1 && macro_section_type.equals("intro")) {
+                            as2.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+                        if(items[1].equals(SELECTED_ANSWERS.get(mCURRENT_TEST_PAGE_POINTER))){
+                            as2.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+
+                        Button as3 = (Button) findViewById(R.id.i_answer_3);
+                        as3.setText(items[2]);
+                        if (indexOfCorrectAnswer == 2 && macro_section_type.equals("intro")) {
+                            as3.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+                        if(items[2].equals(SELECTED_ANSWERS.get(mCURRENT_TEST_PAGE_POINTER))){
+                            as3.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+
+                        Button as4 = (Button) findViewById(R.id.i_answer_4);
+                        as4.setText(items[3]);
+                        if (indexOfCorrectAnswer == 3 && macro_section_type.equals("intro")) {
+                            as4.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+                        if(items[3].equals(SELECTED_ANSWERS.get(mCURRENT_TEST_PAGE_POINTER))){
+                            as3.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+                    }
+
+                    if (items.length == 3) {
+                        Button as1 = (Button) findViewById(R.id.i_answer_1);
+                        as1.setText(items[0]);
+                        if (indexOfCorrectAnswer == 0 && macro_section_type.equals("intro")) {
+                            as1.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+                        if(items[0].equals(SELECTED_ANSWERS.get(mCURRENT_TEST_PAGE_POINTER))){
+                            as1.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+
+                        Button as2 = (Button) findViewById(R.id.i_answer_2);
+                        as2.setText(items[1]);
+                        if (indexOfCorrectAnswer == 1 && macro_section_type.equals("intro")) {
+                            as2.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+                        if(items[1].equals(SELECTED_ANSWERS.get(mCURRENT_TEST_PAGE_POINTER))){
+                            as2.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+
+                        Button as3 = (Button) findViewById(R.id.i_answer_3);
+                        as3.setText(items[2]);
+                        if (indexOfCorrectAnswer == 2 && macro_section_type.equals("intro")) {
+                            as3.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+                        if(items[2].equals(SELECTED_ANSWERS.get(mCURRENT_TEST_PAGE_POINTER))){
+                            as3.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+
+                        Button as4 = (Button) findViewById(R.id.i_answer_4);
+                        as4.setVisibility(View.GONE);
+                    }
+
+
+                    if (items.length == 2) {
+                        Button as1 = (Button) findViewById(R.id.i_answer_1);
+                        as1.setText(items[0]);
+                        if (indexOfCorrectAnswer == 0 && macro_section_type.equals("intro")) {
+                            as1.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+                        if(items[0].equals(SELECTED_ANSWERS.get(mCURRENT_TEST_PAGE_POINTER))){
+                            as1.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+
+                        Button as2 = (Button) findViewById(R.id.i_answer_2);
+                        as2.setText(items[1]);
+                        if (indexOfCorrectAnswer == 1 && macro_section_type.equals("intro")) {
+                            as2.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+
+                        if (items[1].equals(SELECTED_ANSWERS.get(mCURRENT_TEST_PAGE_POINTER))) {
+                           as2.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+                        }
+
+                        Button as3 = (Button) findViewById(R.id.i_answer_3);
+                        as3.setVisibility(View.GONE);
+
+                        Button as4 = (Button) findViewById(R.id.i_answer_4);
+                        as4.setVisibility(View.GONE);
+                    }
+
+                }
+
             }
-
-            if(answer_type.equals("smc")){
-                ip_Layout.setVisibility(View.GONE);
-                imc_Layout.setVisibility(View.GONE);
-                smc_Layout.setVisibility(View.VISIBLE);
-                vt_Layout.setVisibility(View.GONE);
-                // split answers string into array
-                String[] items = answer_options.split("@&@");
-
-                Button questionText = (Button) findViewById(R.id.question_text);
-                questionText.setText(question);
-
-                int indexOfCorrectAnswer = getArrayIndex(items, correct_answer);
-                if(items.length == 4) {
-                    Button as1 = (Button) findViewById(R.id.answer_1);
-                    as1.setText(items[0]);
-                    if (indexOfCorrectAnswer == 0 && macro_section_type.equals("intro")){as1.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);}
-
-                    Button as2 = (Button) findViewById(R.id.answer_2);
-                    as2.setText(items[1]);
-                    if (indexOfCorrectAnswer == 1&& macro_section_type.equals("intro")){as2.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);}
-
-                    Button as3 = (Button) findViewById(R.id.answer_3);
-                    as3.setText(items[2]);
-                    if (indexOfCorrectAnswer == 2 && macro_section_type.equals("intro")){as3.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);}
-
-                    Button as4 = (Button) findViewById(R.id.answer_4);
-                    as4.setText(items[3]);
-                    if (indexOfCorrectAnswer == 3 && macro_section_type.equals("intro")){as4.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);}
-                }
-
-                if(items.length == 3) {
-                    Button as1 = (Button) findViewById(R.id.answer_1);
-                    as1.setText(items[0]);
-                    if (indexOfCorrectAnswer == 0 && macro_section_type.equals("intro")){as1.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);}
-
-                    Button as2 = (Button) findViewById(R.id.answer_2);
-                    as2.setText(items[1]);
-                    if (indexOfCorrectAnswer == 1 && macro_section_type.equals("intro")){as2.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);}
-
-                    Button as3 = (Button) findViewById(R.id.answer_3);
-                    as3.setText(items[2]);
-                    if (indexOfCorrectAnswer == 2 && macro_section_type.equals("intro")){as3.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);}
-
-                    Button as4 = (Button) findViewById(R.id.answer_4);
-                    as4.setVisibility(View.GONE);
-                }
-
-
-                if(items.length == 2) {
-                    Button as1 = (Button) findViewById(R.id.answer_1);
-                    as1.setText(items[0]);
-                    if (indexOfCorrectAnswer == 0 && macro_section_type.equals("intro")){as1.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);}
-
-                    Button as2 = (Button) findViewById(R.id.answer_2);
-                    as2.setText(items[1]);
-                    if (indexOfCorrectAnswer == 1 && macro_section_type.equals("intro")){as2.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);}
-
-                    Button as3 = (Button) findViewById(R.id.answer_3);
-                    as3.setVisibility(View.GONE);
-
-                    Button as4 = (Button) findViewById(R.id.answer_4);
-                    as4.setVisibility(View.GONE);
-                }
-
-
-            }
-            if(answer_type.equals("imc")){
-                ip_Layout.setVisibility(View.GONE);
-                imc_Layout.setVisibility(View.VISIBLE);
-                smc_Layout.setVisibility(View.GONE);
-                vt_Layout.setVisibility(View.GONE);
-
-
-                String[] items = answer_options.split("@&@");
-
-                TextView questionText = (TextView) findViewById(R.id.i_question_text);
-                questionText.setText(question);
-
-
-                ImageView im = (ImageView) findViewById(R.id.question_image);
-                Picasso.with(this).load("http://"+ "35.160.158.110:8080" + "/" +  appState.TEST_ID + "/" + question_media_url).into(im);
-
-                int indexOfCorrectAnswer = getArrayIndex(items, correct_answer);
-                if(items.length == 4) {
-                    Button as1 = (Button) findViewById(R.id.i_answer_1);
-                    as1.setText(items[0]);
-                    if (indexOfCorrectAnswer == 0 && macro_section_type.equals("intro")){as1.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);}
-
-                    Button as2 = (Button) findViewById(R.id.i_answer_2);
-                    as2.setText(items[1]);
-                    if (indexOfCorrectAnswer == 1 && macro_section_type.equals("intro")){as2.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);}
-
-                    Button as3 = (Button) findViewById(R.id.i_answer_3);
-                    as3.setText(items[2]);
-                    if (indexOfCorrectAnswer == 2 && macro_section_type.equals("intro")){as3.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);}
-
-                    Button as4 = (Button) findViewById(R.id.i_answer_4);
-                    as4.setText(items[3]);
-                    if (indexOfCorrectAnswer == 3 && macro_section_type.equals("intro")){as4.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);}
-                }
-
-                if(items.length == 3) {
-                    Button as1 = (Button) findViewById(R.id.i_answer_1);
-                    as1.setText(items[0]);
-                    if (indexOfCorrectAnswer == 0 && macro_section_type.equals("intro")){as1.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);}
-
-                    Button as2 = (Button) findViewById(R.id.i_answer_2);
-                    as2.setText(items[1]);
-                    if (indexOfCorrectAnswer == 1 && macro_section_type.equals("intro")){as2.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);}
-
-                    Button as3 = (Button) findViewById(R.id.i_answer_3);
-                    as3.setText(items[2]);
-                    if (indexOfCorrectAnswer == 2 && macro_section_type.equals("intro")){as3.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);}
-
-                    Button as4 = (Button) findViewById(R.id.i_answer_4);
-                    as4.setVisibility(View.GONE);
-                }
-
-
-                if(items.length == 2) {
-                    Button as1 = (Button) findViewById(R.id.i_answer_1);
-                    as1.setText(items[0]);
-                    if (indexOfCorrectAnswer == 0 && macro_section_type.equals("intro")){as1.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);}
-
-                    Button as2 = (Button) findViewById(R.id.i_answer_2);
-                    as2.setText(items[1]);
-                    if (indexOfCorrectAnswer == 1 && macro_section_type.equals("intro")){as2.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);}
-
-                    Button as3 = (Button) findViewById(R.id.i_answer_3);
-                    as3.setVisibility(View.GONE);
-
-                    Button as4 = (Button) findViewById(R.id.i_answer_4);
-                    as4.setVisibility(View.GONE);
-                }
-
-            }
-
-
             // more types of layout here ....
 
 
@@ -1049,7 +1205,7 @@ public class TestActivity extends Activity {
         mCURRENT_TIME_TAKEN++;
         mTIMER_HAS_BEEN_STARTED =1;
 
-//        if(mCURRENT_TIME_TAKEN => )
+//      if(mCURRENT_TIME_TAKEN => )
         // convert to big int and then convert to a MM and SS object string and display
         Integer intObj = new Integer(mCURRENT_TIME_TAKEN);
         Number numObj = (Number)intObj;

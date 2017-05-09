@@ -117,7 +117,7 @@ public class ACInterviewActivity extends Activity {
     public void getInterviewPages(){
 
         // retrieve the list of participats
-        String URL = "http://"+ appState.ENDPOINT + "/v1/companies/interview/"+appState.ACID;
+        String URL = "https://"+ appState.ENDPOINT + "/v1/companies/interview/"+appState.ACID;
         Log.v("ADS", "URL is  .. " + URL);
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("username", appState.USERNAME);
@@ -213,7 +213,7 @@ public class ACInterviewActivity extends Activity {
             stopRecording();
         }
         // save all info to the db (id,file_ref,length,candiddate_id,question_id)
-        db.insertNewAudio(Integer.valueOf(appState.AC_CURRENT_CANDIDATE_ID),mCURRENT_QUESTION_NUMBER,Integer.valueOf(appState.ACID),mACTIVITY_TYPE,mFileName,0,0,0);
+        db.insertNewAudio(Integer.valueOf(appState.AC_CURRENT_CANDIDATE_ID),mCURRENT_QUESTION_NUMBER,Integer.valueOf(appState.ACID),appState.AC_CURRENT_ACTIVITY_TYPE,mFileName,0,0,0);
 
         // gernerate new file handle >> actually no need as we do this in setViews
 

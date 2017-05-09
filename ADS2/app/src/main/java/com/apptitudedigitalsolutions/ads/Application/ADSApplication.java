@@ -7,10 +7,14 @@ package com.apptitudedigitalsolutions.ads.Application;
 
 import android.app.Application;
 import android.content.res.Configuration;
+import android.support.annotation.NonNull;
+import android.util.Log;
 
 import java.util.ArrayList;
 
 import com.apptitudedigitalsolutions.ads.DatabaseUtils.DatabaseHelper;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.FirebaseInstanceIdService;
 
 import org.json.JSONArray;
 
@@ -27,6 +31,7 @@ public class ADSApplication extends Application {
     public static String ENDPOINT = "";
     public static String COMPANY_ID = "";
 
+    public static Boolean BACK_TO_LOGIN = false;
     // AC spercific locals
     /*
     * These properties are set when an asessemtn center is picked in the first case, then the remainder
@@ -57,6 +62,8 @@ public class ADSApplication extends Application {
     public static String AC_CANDIDATE_EMAIL= "";
     public static String AC_CANDIDATE_ROLE = "";
 
+    public static String TOKEN = "";
+
 
 
     // Test spercific globals
@@ -76,6 +83,7 @@ public class ADSApplication extends Application {
 
 
 
+
     // Called when the application is starting, before any other application objects have been created.
     // Overriding this method is totally optional!
     @Override
@@ -85,6 +93,15 @@ public class ADSApplication extends Application {
         // Set Globals
 
         refreshCredentials();
+
+        FBTokenRegistration x = new FBTokenRegistration();
+        x.setToken();
+
+//        String refreshedToken = FirebaseInstanceId.getInstance().getToken();
+//        Log.d("ADS", "Refreshed token: " + refreshedToken);
+//
+//        // TODO: Implement this method to send any registration to your app's servers.
+//        TOKEN = refreshedToken;
     }
 
     public void refreshCredentials(){

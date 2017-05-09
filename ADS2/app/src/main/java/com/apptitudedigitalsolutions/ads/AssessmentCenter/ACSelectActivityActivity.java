@@ -28,7 +28,7 @@ public class ACSelectActivityActivity extends Activity {
 //    String appState.AC_CANDIDATE_FIRST;
 //    String appState.AC_CANDIDATE_LAST;
 //    String appState.AC_CANDIDATE_EMAIL;
-    String mSET_ACTIVITIES;
+//    String mSET_ACTIVITIES;
 //    String[] appState.AC_SET_ACTIVITIES_IDS_ARRAY;
 //    String appState.AC_COMPLETED_ACTIVITIES;
 //    String[] appState.AC_COMPLETED_ACTIVITIES_ARRAY;
@@ -93,21 +93,15 @@ public class ACSelectActivityActivity extends Activity {
         interviewBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Goo to the interview activity
-                Intent intent = new Intent(ACSelectActivityActivity.this, ACInterviewActivity.class);
-                // get the id of the activity you are looking for in this case
-//                intent.putExtra("candidate_id", appState.AC_CURRENT_CANDIDATE_ID);
-//                intent.putExtra("ac_id",appState.ACID);
-//                intent.putExtra("id", appState.ACID);
-//                intent.putExtra("title", appState.AC_TITLE);
-//                intent.putExtra("to_be_conducted_on", appState.AC_CONDUCTED_ON);
-//                intent.putExtra("description", appState.AC_DESC);
-//                intent.putExtra("activity_ids", appState.AC_ACTIVITY_IDS);
-//                intent.putExtra("activity_types", appState.AC_ACTIVITY_TYPES);
-//                intent.putExtra("set_activitie_tags",appState.AC_SET_ACTIVITIE_TAGS);
-//                intent.putExtra("completed_activities",appState.AC_COMPLETED_ACTIVITIES);
-
-                startActivity(intent);
-
+                if(appState.AC_COMPLETED_ACTIVITIES_TAGS_ARRAY.contains("i")){
+                    Intent intent = new Intent(ACSelectActivityActivity.this, ACActivityReviewActivity.class);
+                    appState.AC_CURRENT_ACTIVITY_TYPE = "interview";
+                    startActivity(intent);
+                }else {
+                    Intent intent = new Intent(ACSelectActivityActivity.this, ACInterviewActivity.class);
+                    appState.AC_CURRENT_ACTIVITY_TYPE = "interview";
+                    startActivity(intent);
+                }
             }
         });
 
@@ -124,27 +118,26 @@ public class ACSelectActivityActivity extends Activity {
         presentationBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // go to the presentation activity
-                Intent intent = new Intent(ACSelectActivityActivity.this, ACPresentationActivity.class);
-                // get the id of the activity you are looking for in this case
-//                intent.putExtra("candidate_id", appState.AC_CURRENT_CANDIDATE_ID);
-//                intent.putExtra("ac_id",appState.ACID);
-//                intent.putExtra("id", appState.ACID);
-//                intent.putExtra("title", appState.AC_TITLE);
-//                intent.putExtra("to_be_conducted_on", appState.AC_CONDUCTED_ON);
-//                intent.putExtra("description", appState.AC_DESC);
-//                intent.putExtra("activity_ids", appState.AC_ACTIVITY_IDS);
-//                intent.putExtra("activity_types", appState.AC_ACTIVITY_TYPES);
-//                intent.putExtra("set_activitie_tags",appState.AC_SET_ACTIVITIE_TAGS);
-//                intent.putExtra("completed_activities",appState.AC_COMPLETED_ACTIVITIES);
 
-                startActivity(intent);
+                if(appState.AC_COMPLETED_ACTIVITIES_TAGS_ARRAY.contains("p")){
+                    Intent intent = new Intent(ACSelectActivityActivity.this, ACActivityReviewActivity.class);
+                    appState.AC_CURRENT_ACTIVITY_TYPE = "presentation";
+                    startActivity(intent);
+                }else {
+                    Intent intent = new Intent(ACSelectActivityActivity.this, ACPresentationActivity.class);
+                    appState.AC_CURRENT_ACTIVITY_TYPE = "presentation";
+                    startActivity(intent);
+                }
+
+
 
             }
         });
         if(Arrays.asList(appState.AC_SET_ACTIVITIE_TYPES_ARRAY).contains("p")){
             // button should be shown
+            presentationBtn.setVisibility(View.VISIBLE);
         }else {
-            interviewBtn.setVisibility(View.GONE);
+            presentationBtn.setVisibility(View.GONE);
         }
 
 
@@ -152,27 +145,25 @@ public class ACSelectActivityActivity extends Activity {
         roleplayBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // go to the roleplay activity
-                Intent intent = new Intent(ACSelectActivityActivity.this, ACRoleplayActivity.class);
-                // get the id of the activity you are looking for in this case
-//                intent.putExtra("candidate_id", appState.AC_CURRENT_CANDIDATE_ID);
-//                intent.putExtra("ac_id",appState.ACID);
-//                intent.putExtra("id", appState.ACID);
-//                intent.putExtra("title", appState.AC_TITLE);
-//                intent.putExtra("to_be_conducted_on", appState.AC_CONDUCTED_ON);
-//                intent.putExtra("description", appState.AC_DESC);
-//                intent.putExtra("activity_ids", appState.AC_ACTIVITY_IDS);
-//                intent.putExtra("activity_types", appState.AC_ACTIVITY_TYPES);
-//                intent.putExtra("set_activitie_tags",appState.AC_SET_ACTIVITIE_TAGS);
-//                intent.putExtra("completed_activities",appState.AC_COMPLETED_ACTIVITIES);
 
-                startActivity(intent);
+                if(appState.AC_COMPLETED_ACTIVITIES_TAGS_ARRAY.contains("rp")){
+                    Intent intent = new Intent(ACSelectActivityActivity.this, ACActivityReviewActivity.class);
+                    appState.AC_CURRENT_ACTIVITY_TYPE = "roleplay";
+                    startActivity(intent);
+                }else {
+                    Intent intent = new Intent(ACSelectActivityActivity.this, ACRoleplayActivity.class);
+                    appState.AC_CURRENT_ACTIVITY_TYPE = "roleplay";
+                    startActivity(intent);
+                }
+
             }
         });
         if(Arrays.asList(appState.AC_SET_ACTIVITIE_TYPES_ARRAY).contains("rp")){
             // button should be shown
+            roleplayBtn.setVisibility(View.VISIBLE);
 
         }else {
-            interviewBtn.setVisibility(View.GONE);
+            roleplayBtn.setVisibility(View.GONE);
         }
 
 
@@ -204,6 +195,8 @@ public class ACSelectActivityActivity extends Activity {
         // do a get on the participant to see what activities they have completed
 
     }
+
+
 
     /**
      * Called when the activity is about to become visible.

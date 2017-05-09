@@ -146,7 +146,7 @@ public class ACAdminActivity extends AppCompatActivity implements NavigationView
         alert.setPositiveButton("Add", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
 
-                String URL = "http://"+ appState.ENDPOINT + "/v1/companies/assessmentcentre/addcandidate/"+appState.ACID;
+                String URL = "https://"+ appState.ENDPOINT + "/v1/companies/assessmentcentre/addcandidate/"+appState.ACID;
                 Log.e("ADS",URL);
                 HashMap<String, String> params = new HashMap<String, String>();
                 params.put("username", appState.USERNAME);
@@ -193,7 +193,7 @@ public class ACAdminActivity extends AppCompatActivity implements NavigationView
     // add method for getting all partcicpatns
     public void getACparticipants(){
         // retrieve the list of participats
-        String URL = "http://"+ appState.ENDPOINT + "/v2/companies/assessmentcentres/candidates";
+        String URL = "https://"+ appState.ENDPOINT + "/v2/companies/assessmentcentres/candidates";
         Log.v("ADS", "URL is  .. " + URL);
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("username", appState.USERNAME);
@@ -334,23 +334,13 @@ public class ACAdminActivity extends AppCompatActivity implements NavigationView
                             appState.AC_ACTIVITY_IDS= set_activities;
                             appState.AC_COMPLETED_ACTIVITIES = completed_activities;
 
-                            // launch admin view for test
+                            appState.AC_COMPLETED_ACTIVITIES_ARRAY = new String[0];
+                            appState.AC_SET_ACTIVITIES_IDS_ARRAY = new String[0];
+                            appState.AC_SET_ACTIVITIE_TYPES_ARRAY = new String[0];
+                            appState.AC_COMPLETED_ACTIVITIES_TAGS_ARRAY= new ArrayList<String>();
+
+                        // launch admin view for test
                             Intent intent = new Intent(ACAdminActivity.this, ACSelectActivityActivity.class);
-//                            intent.putExtra("candidate_id", candidate_id);
-//                            intent.putExtra("candidate_first", candidate_first);
-//                            intent.putExtra("candidate_last", candidate_last);
-//                            intent.putExtra("candidate_email", candidate_email);
-//                            intent.putExtra("candidate_role",candidate_role);
-//                            intent.putExtra("other",other);
-//                            intent.putExtra("set_activities",set_activities);
-//                            intent.putExtra("completed_activities",completed_activities);
-//                            intent.putExtra("ac_id",appState.ACID);
-//                            intent.putExtra("set_activitie_tags",appState.AC_ACTIVITY_TYPES);
-//                            intent.putExtra("title", appState.AC_TITLE);
-//                            intent.putExtra("to_be_conducted_on", appState.AC_CONDUCTED_DATE);
-//                            intent.putExtra("description", appState.AC_DESC);
-//                            intent.putExtra("activity_ids", appState.AC_ACTIVITY_IDS);
-//                            intent.putExtra("activity_types", appState.AC_ACTIVITY_TYPES);
                             startActivity(intent);
 
                     }

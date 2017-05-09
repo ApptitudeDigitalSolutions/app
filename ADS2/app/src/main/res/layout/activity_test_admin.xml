@@ -58,6 +58,8 @@
                     <TextView
                         android:text="Title :"
                         android:layout_marginLeft="20dp"
+                        android:textColor="@android:color/black"
+                        android:textSize="30sp"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:id="@+id/test_title" />
@@ -80,6 +82,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:id="@+id/test_ID"
+                            android:textSize="20sp"
                             android:layout_weight="1"
                             android:gravity="right"
                             android:layout_marginRight="20dp"/>
@@ -121,7 +124,7 @@
             <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
-                android:layout_height="507dp">
+                android:layout_height="490dp">
 
                 <android.support.v7.widget.RecyclerView
                     android:id="@+id/my_recycler_view"
@@ -161,12 +164,22 @@
                     <!--android:onClick="startSection"/>-->
 
                 <Button
-                    android:text="Stop Test"
+                    android:text="Complete Test"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/stop_test"
                     android:layout_weight="1"
-                    android:onClick="stopTest"/>
+                    android:onClick="completeTest"/>
+
+
+
+                <Button
+                    android:text="Reset Test"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/rest_test"
+                    android:layout_weight="1"
+                    android:onClick="resetTest"/>
             </LinearLayout>
 
         </LinearLayout>

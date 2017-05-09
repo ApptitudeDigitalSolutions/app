@@ -21,7 +21,7 @@ public class LandingActivityPageFragment extends Fragment {
         ViewGroup rootView = (ViewGroup) inflater.inflate(
                 R.layout.fragment_screen_slide_page, container, false);
         ImageView im = (ImageView) rootView.findViewById(R.id.imageView);
-        Picasso.with(this.getContext()).load("http://"+ "apptitudedigitalsolutions.com:8080" + "/" + 4 + "/" + "slide1.png").into(im);
+        Picasso.with(this.getContext()).load("https://"+ "adsapp.eu" + "/" + 4 + "/" + "slide1.png").into(im);
         return rootView;
     }
 }

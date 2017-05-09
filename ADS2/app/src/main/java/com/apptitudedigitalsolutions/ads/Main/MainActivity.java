@@ -139,7 +139,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-
+        Boolean shouldLogout = false;
         if (id == R.id.nav_phone_us) {
 
         } else if (id == R.id.nav_tests) {
@@ -153,11 +153,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else if (id == R.id.nav_logout) {
             Log.e("ADS","LOGOUT TAPPED");
             db.nukeUserData();
-            Intent intent = new Intent(this, LandingActivity.class);
-            startActivity(intent);
+            shouldLogout = true;
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
+
+        if (shouldLogout){
+            Intent intent = new Intent(this, LandingActivity.class);
+            startActivity(intent);
+        }
         return true;
     }
 
@@ -175,7 +179,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void getAllACs(){
-        String URL = "http://"+  appState.ENDPOINT + "/v1/companies/assessmentcentres/" +  appState.COMPANY_ID;
+        String URL = "https://"+  appState.ENDPOINT + "/v1/companies/assessmentcentres/" +  appState.COMPANY_ID;
         Log.v("ADS", "URL is  .. " + URL);
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("username", appState.USERNAME);
@@ -216,7 +220,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void getAllTests(){
         getSupportActionBar().setTitle("ADS - Test Centers");
-        String URL = "http://"+  appState.ENDPOINT + "/v1/companies/tests/" +  appState.COMPANY_ID;
+        String URL = "https://"+  appState.ENDPOINT + "/v1/companies/tests/" +  appState.COMPANY_ID;
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("username", appState.USERNAME);
         params.put("passcode",  appState.PASSCODE);

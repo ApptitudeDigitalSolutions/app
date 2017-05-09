@@ -69,6 +69,8 @@ public class LandingActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
         appState = ((ADSApplication)this.getApplication());
+        appState.BACK_TO_LOGIN = false;
+
          db = new DatabaseHelper(LandingActivity.this);
          db.getReadableDatabase();
         ArrayList<String> userdata = db.getUsernamePasscodeEndpointArray();
@@ -255,12 +257,12 @@ public class LandingActivity extends FragmentActivity {
 
         final EditText email = new EditText(context);
         email.setHint("email");
-        email.setText("elliot_admin");
+        email.setText("admin");
         layout.addView(email);
 
         final EditText password = new EditText(context);
         password.setHint("password");
-        //password.setText("smashing");
+        password.setText("smashing");
         layout.addView(password);
 
         alert.setMessage("Please enter your admin email and password");
@@ -272,7 +274,7 @@ public class LandingActivity extends FragmentActivity {
         alert.setPositiveButton("Login", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
 
-                String URL = "http://apptitudedigitalsolutions.com:8080/v1/user/login";
+                String URL = "https://adsapp.eu/v1/user/login";
 
 // Post params to be sent to the server
                 HashMap<String, String> params = new HashMap<String, String>();
@@ -358,7 +360,7 @@ public class LandingActivity extends FragmentActivity {
         alert.setPositiveButton("Lauch test", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
 
-                String URL = "http://apptitudedigitalsolutions.com:8080/v1/companies/test/validation/" + testIDEntry.getText();
+                String URL = "https://adsapp.eu/v1/companies/test/validation/" + testIDEntry.getText();
                 Log.e("ADS test info endoirnt ", URL);
 // Post params to be sent to the server
                 HashMap<String, String> params = new HashMap<String, String>();
@@ -372,6 +374,11 @@ public class LandingActivity extends FragmentActivity {
                                 Log.e("ADS test info", String.valueOf(response));
                                 Intent intent = new Intent(context, TestActivity.class);
                                 try {
+                                    appState.TEST_ID = testIDEntry.getText().toString();
+                                    appState.TEST_TITLE = response.getString("test_title");
+                                    appState.TEST_DESC = response.getString("description");
+                                    appState.TEST_SECTIONS_TAGS = response.getString("test_ids_in_series");
+
                                     intent.putExtra("test_id",response.getString("test_id"));
                                     intent.putExtra("test_title",response.getString("test_title"));
                                     intent.putExtra("description",response.getString("description"));

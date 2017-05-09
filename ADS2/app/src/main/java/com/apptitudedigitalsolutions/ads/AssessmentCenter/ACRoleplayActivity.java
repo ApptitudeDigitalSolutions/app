@@ -115,7 +115,7 @@ public class ACRoleplayActivity extends Activity {
     public void getRoleplayPages(){
 
         // retrieve the list of participats
-        String URL = "http://"+ appState.ENDPOINT + "/v1/companies/roleplay/"+appState.ACID;
+        String URL = "https://"+ appState.ENDPOINT + "/v1/companies/roleplay/"+appState.ACID;
         Log.v("ADS", "URL is  .. " + URL);
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("username", appState.USERNAME);

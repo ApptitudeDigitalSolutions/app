@@ -114,7 +114,7 @@ public class ACPresentationActivity extends Activity {
     public void getPresentationPages(){
 
         // retrieve the list of participats
-        String URL = "http://"+ appState.ENDPOINT + "/v1/companies/presentation/"+appState.ACID;
+        String URL = "https://"+ appState.ENDPOINT + "/v1/companies/presentation/"+appState.ACID;
         Log.v("ADS", "URL is  .. " + URL);
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("username", appState.USERNAME);

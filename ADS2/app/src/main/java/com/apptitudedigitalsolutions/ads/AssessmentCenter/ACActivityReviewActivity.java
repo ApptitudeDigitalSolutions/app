@@ -38,6 +38,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -62,13 +63,18 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
 
     JSONObject answers = new JSONObject();
     public JSONArray answersForAllReviewQuestions = new JSONArray();
-   
+
+    Boolean mHAS_BEEN_PAUSED = false;
     JSONObject CANDIDATE_HISTORY = new JSONObject();
     ArrayList<ArrayList<String>> mANSWERS_TEXT = new ArrayList<ArrayList<String>>();
     ArrayList<ArrayList<String>> mANSWERS_TYPES = new ArrayList<ArrayList<String>>();
     ArrayList<String> mTEXT_FOR_COMMENTS = new ArrayList<String>();
     ArrayList<String> mTEXT_FOR_SCOURS = new ArrayList<String>();
     DatabaseHelper db;
+
+    String[] commentsArray;
+    String[] scoursArray;
+
 
     private Handler mHandler = new Handler();
     boolean mPLAYING = false;
@@ -82,7 +88,6 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
     private RecyclerView mRecyclerViewReview;
     private RecyclerView.Adapter mAdapterReview;
     private RecyclerView.LayoutManager mLayoutManagerReview;
-
 
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
@@ -138,7 +143,8 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
        // Now we need to unload the answers into the correct arrays, lets print the array and then work out how to handle it
 
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-                JSONArray x = new JSONArray(CANDIDATE_HISTORY.getJSONArray("answers"));
+                //JSONArray x = new JSONArray(CANDIDATE_HISTORY.getJSONArray("answers"));
+                JSONArray x = CANDIDATE_HISTORY.getJSONArray("answers");
             }
 
         } catch (JSONException e) {
@@ -179,10 +185,7 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
         mAdapter = new ACActivityReviewActivity.MyReviewAdapter(audioBlobsJSONARRAY);
         mRecyclerView.setAdapter(mAdapter);
 
-
         Log.e("ADS", "AUDO BLOBS >>>>>>> " + audioBlobsJSONARRAY.toString());
-
-
 
         getInterviewReviewPages();
 
@@ -197,9 +200,6 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
 
         mAdapterReview = new ACActivityReviewActivity.MyAdapter(reviewPagesJSONArray);
         mRecyclerViewReview.setAdapter(mAdapterReview);
-
-
-
 
     }
 
@@ -263,9 +263,13 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
 
     public  void pausePlaySelection(View v){
         if(mPLAYING == true){
-            stopPlaying();
+            pausePlaying();
         }else {
-            startPlaying();
+            if(mHAS_BEEN_PAUSED){
+                resumePlaying();
+            }else {
+                startPlaying();
+            }
         }
     }
 
@@ -282,6 +286,8 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
 
     private void startPlaying() {
         mPlayer = new MediaPlayer();
+
+
         try {
 
                 mPlayer.setDataSource(mTAPPED_AUDIO_FILE_NAME);
@@ -298,6 +304,17 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
             Log.e("ADS", "prepare() failed");
         }
     }
+
+    private void pausePlaying() {
+        mHAS_BEEN_PAUSED = true;
+        mPlayer.pause();
+    }
+
+
+    private void resumePlaying() {
+        mPlayer.start();
+    }
+
 
     private void stopPlaying() {
         mPlayer.release();
@@ -328,43 +345,121 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
 
 
 
+    public void deleteAllResults(){
+
+        String  URL = "https://"+ appState.ENDPOINT + "/v1/companies/assessmentcentres/delete/"+appState.ACID;
+
+        Log.v("ADS", "URL is  .. " + URL);
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("username", appState.USERNAME);
+        params.put("passcode", appState.PASSCODE);
+        params.put("candidate_id", appState.AC_CURRENT_CANDIDATE_ID);
+
+        if(appState.AC_CURRENT_ACTIVITY_TYPE.equals("interview")){
+            params.put("section_type", "i");
+        }else if (appState.AC_CURRENT_ACTIVITY_TYPE.equals("presentation")){
+            params.put("section_type", "p");
+        }else if (appState.AC_CURRENT_ACTIVITY_TYPE.equals("roleplay")){
+            params.put("section_type", "rp");
+        }
+
+        params.put("ac_id", appState.ACID);
+
+        JsonObjectRequest request_json = new JsonObjectRequest(URL, new JSONObject(params),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        updateServerWithReviewResults();
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                VolleyLog.e("Error: ", error.getMessage());
+            }
+        });
+
+        RequestQueue requestQueue = Volley.newRequestQueue(ACActivityReviewActivity.this);
+        request_json.setShouldCache(false);
+        requestQueue.add(request_json);// reload the list view
 
 
+    }
+
+    private JSONArray concatArray(JSONArray arr1, JSONArray arr2)
+            throws JSONException {
+        JSONArray result = new JSONArray();
+        for (int i = 0; i < arr1.length(); i++) {
+            result.put(arr1.get(i));
+        }
+        for (int i = 0; i < arr2.length(); i++) {
+            result.put(arr2.get(i));
+        }
+        return result;
+    }
 
 
+    public void updateServerWithReviewResults(){
 
-    public void submitReview(View v){
-        // itterate over the array of objects mANSWERS_TEXT and then pass credetials to submit method
         JSONObject userObject = new JSONObject();
         try {
             userObject.put("id", appState.AC_CURRENT_CANDIDATE_ID);
 
 
-        for(int i = 0; i < mANSWERS_TEXT.size();){
-            for(int j = 0; j < mANSWERS_TEXT.get(i).size();){
-               JSONObject answerObject = new JSONObject();
-                answerObject.put("answer_text",mANSWERS_TEXT.get(i).get(j));
-                answerObject.put("answer_type",mANSWERS_TYPES.get(i).get(j));
+            for(int i = 0; i < mANSWERS_TEXT.size();){
+                for(int j = 0; j < mANSWERS_TEXT.get(i).size();){
+                    JSONObject answerObject = new JSONObject();
+                    answerObject.put("answer_text",mANSWERS_TEXT.get(i).get(j));
+                    answerObject.put("answer_type",mANSWERS_TYPES.get(i).get(j));
 
-                answersForAllReviewQuestions.put(i,answerObject);
+                    answersForAllReviewQuestions.put(answerObject);
 
-               submit(mANSWERS_TEXT.get(i).get(j),mANSWERS_TYPES.get(i).get(j),i);
+                    submit(mANSWERS_TEXT.get(i).get(j),mANSWERS_TYPES.get(i).get(j),i);
 
-                //int id = getResources().getIdentifier("c"+i, "id", getPackageName());
-                j++;
+                    //int id = getResources().getIdentifier("c"+i, "id", getPackageName());
+                    j++;
+                }
+
+                RecyclerView.ViewHolder rvview = mRecyclerViewReview.findViewHolderForLayoutPosition(i);
+                //View view = mRecyclerViewReview.getLayoutManager().findViewByPosition(i);
+
+                //View view = rvview.;
+
+                if(commentsArray[i].length() > 0) {
+                    JSONObject answerObjectComments = new JSONObject();
+                    answerObjectComments.put("answer_text", commentsArray[i]);
+                    answerObjectComments.put("answer_type", "ac");
+                }
+
+                if(scoursArray[i].length() >0){
+                JSONObject answerObjectScore = new JSONObject();
+                answerObjectScore.put("answer_text",scoursArray[i]);
+                answerObjectScore.put("answer_type","s");
+                }
+                i++;
             }
-            i++;
-        }
 
-            userObject.put("answers", answersForAllReviewQuestions);
-            Log.e("ADS" , "User Object " + userObject);
+            JSONArray originalAnswers = new JSONArray();
+
+            if(CANDIDATE_HISTORY.length()>0){
+                originalAnswers = CANDIDATE_HISTORY.getJSONArray("answers");
+
+            }
+
+            JSONArray answersToStore = concatArray(originalAnswers, answersForAllReviewQuestions);
+
+            JSONObject finalOBJ = new JSONObject();
+            finalOBJ.put("answers", answersToStore);
+            Log.e("ADS" , "User Object " + finalOBJ);
 
             //save the object to shared preferences
             SharedPreferences.Editor editor = mAppSettings.edit();
-            editor.putString(appState.AC_CURRENT_CANDIDATE_ID, String.valueOf(userObject));
+            editor.remove(appState.AC_CURRENT_CANDIDATE_ID);
             editor.commit();
+            SharedPreferences.Editor editor2 = mAppSettings.edit();
+            editor2.putString(appState.AC_CURRENT_CANDIDATE_ID, String.valueOf(finalOBJ));
+            editor2.commit();
 
-    } catch (JSONException e) {
+        } catch (JSONException e) {
             e.printStackTrace();
         }
         mANSWERS_TEXT.clear();
@@ -399,17 +494,25 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
 //        setViews();
     }
 
+    public void submitReview(View v){
+        // itterate over the array of objects mANSWERS_TEXT and then pass credetials to submit method
+
+        // issue a delete request for all resuts for this activity server side
+        deleteAllResults();
+    }
+
+
 
     public void getInterviewReviewPages(){
 
         // retrieve the list of participats
         String URL ="";
         if(appState.AC_CURRENT_ACTIVITY_TYPE.equals("interview")) {
-             URL = "http://" + appState.ENDPOINT + "/v1/companies/assessmentcentres/interview/review/" + appState.ACID;
+             URL = "https://" + appState.ENDPOINT + "/v1/companies/assessmentcentres/interview/review/" + appState.ACID;
         }else if(appState.AC_CURRENT_ACTIVITY_TYPE.equals("roleplay")){
-            URL = "http://" + appState.ENDPOINT + "/v1/companies/assessmentcentres/roleplay/review/" + appState.ACID;
+            URL = "https://" + appState.ENDPOINT + "/v1/companies/assessmentcentres/roleplay/review/" + appState.ACID;
         }else if(appState.AC_CURRENT_ACTIVITY_TYPE.equals("presentation")){
-            URL = "http://" + appState.ENDPOINT + "/v1/companies/assessmentcentres/presentation/review/" + appState.ACID;
+            URL = "https://" + appState.ENDPOINT + "/v1/companies/assessmentcentres/presentation/review/" + appState.ACID;
         }
 
         Log.v("ADS", "URL is  .. " + URL);
@@ -428,17 +531,49 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
                             reviewPagesJSONArray = response.getJSONArray("pages");
                             mREVIEW_LENGTH = reviewPagesJSONArray.length()-1;
 
+                            commentsArray = new String[reviewPagesJSONArray.length()];
+                            scoursArray = new String[reviewPagesJSONArray.length()];
+
                             for(int i = 0; i < reviewPagesJSONArray.length();){
                                 ArrayList<String> x = new ArrayList<String>();
                                 ArrayList<String> y = new ArrayList<String>();
-                                if(CANDIDATE_HISTORY.getJSONArray("answers").length() != 0) {
-                                    for (int j = 0; j < CANDIDATE_HISTORY.getJSONArray("answers").length(); ) {
-                                        String answerText = CANDIDATE_HISTORY.getJSONArray("answers").getJSONObject(j).get("answer_text").toString();
-                                        if (answerText.equals(reviewPagesJSONArray.getJSONObject(i).getString("question"))) {
-                                            // this measn the text of the answer is the same as that which has been entered before so we need
-                                            // to add the anser and the answer type
 
+                                JSONObject n = new JSONObject();
+                                n = (JSONObject) reviewPagesJSONArray.get(i);
+
+                                String positive_indicators = n.getString("positive_indicators");
+                                String negative_indicators = n.getString("negative_indicators");
+                                List<String> pis = Arrays.asList(positive_indicators.split("@&@")); //positive_indicators.split("@&@");
+                                List<String> nis = Arrays.asList(negative_indicators.split("@&@"));
+
+
+                                if(CANDIDATE_HISTORY.length() != 0) {
+
+                                    for (int j = 0; j < CANDIDATE_HISTORY.getJSONArray("answers").length(); ) {
+
+                                            String answerText = CANDIDATE_HISTORY.getJSONArray("answers").getJSONObject(j).get("answer_text").toString();
                                             String answerType = CANDIDATE_HISTORY.getJSONArray("answers").getJSONObject(j).get("answer_type").toString();
+
+                                            // compare this string to all strings in the pis and nis arrays to see if any of the questions texts
+
+                                            for(int k = 0; k < nis.size();){
+                                                Log.i("ADS","a = " + answerText);
+                                                Log.i("ADS","b = "+nis.get(k));
+                                                Log.i("ADS","c = "+pis.get(k));
+
+                                                if(nis.get(k).equals(answerText)){
+                                                    x.add(answerType);
+                                                    y.add(answerText);
+                                                }
+
+                                                if (pis.get(k).equals(answerText)){
+                                                    x.add(answerType);
+                                                    y.add(answerText);
+                                                }
+
+                                                k++;
+                                            }
+
                                             if(answerType.equals("ac")){
                                                 mTEXT_FOR_COMMENTS.add(CANDIDATE_HISTORY.getJSONArray("answers").getJSONObject(j).get("answer_text").toString());
                                             }
@@ -447,19 +582,28 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
                                                 mTEXT_FOR_SCOURS.add(CANDIDATE_HISTORY.getJSONArray("answers").getJSONObject(j).get("answer_text").toString());
                                             }
 
-                                            if(answerType.equals("pi") || answerType.equals("ni")){
-                                                x.add(answerType);
-                                                y.add(answerText);
+                                            if(answerType.equals("pi")|| answerType.equals("ni")){
+                                                mTEXT_FOR_SCOURS.add("");
+                                                mTEXT_FOR_COMMENTS.add("");
                                             }
-                                        }
+
+
+
                                         j++;
                                     }
+
+                                    mANSWERS_TYPES.add(x);
+                                    mANSWERS_TEXT.add(y);
+
+                                }else{
+                                    mTEXT_FOR_SCOURS.add("");
+                                    mTEXT_FOR_COMMENTS.add("");
+                                    mANSWERS_TYPES.add(x);
+                                    mANSWERS_TEXT.add(y);
                                 }
 
-                                mANSWERS_TYPES.add(x);
-                                mANSWERS_TEXT.add(y);
-//                                mTEXT_FOR_SCOURS.add("");
-//                                mTEXT_FOR_COMMENTS.add("");
+
+
                                 i++;
                             }
 //                            setViews();
@@ -487,11 +631,11 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
         // perfrom request
         String URL = "";
         if(appState.AC_CURRENT_ACTIVITY_TYPE.equals("interview")){
-            URL = "http://"+ appState.ENDPOINT + "/v1/companies/assessmentcentres/interview/submitreview/"+appState.ACID;
+            URL = "https://"+ appState.ENDPOINT + "/v1/companies/assessmentcentres/interview/submitreview/"+appState.ACID;
         }else if (appState.AC_CURRENT_ACTIVITY_TYPE.equals("presentation")){
-            URL = "http://"+ appState.ENDPOINT + "/v1/companies/assessmentcentres/presentation/submitreview/"+appState.ACID;
+            URL = "https://"+ appState.ENDPOINT + "/v1/companies/assessmentcentres/presentation/submitreview/"+appState.ACID;
         }else if (appState.AC_CURRENT_ACTIVITY_TYPE.equals("roleplay")){
-            URL = "http://"+ appState.ENDPOINT + "/v1/companies/assessmentcentres/roleplay/submitreview/"+appState.ACID;
+            URL = "https://"+ appState.ENDPOINT + "/v1/companies/assessmentcentres/roleplay/submitreview/"+appState.ACID;
         }
 
         Log.v("ADS", "URL is  .. " + URL);
@@ -525,11 +669,11 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
         // perfrom request
         String  URL = "";
         if(appState.AC_CURRENT_ACTIVITY_TYPE.equals("interview")){
-            URL = "http://"+ appState.ENDPOINT + "/v1/companies/assessmentcentres/interview/complete/"+appState.ACID;
+            URL = "https://"+ appState.ENDPOINT + "/v1/companies/assessmentcentres/interview/complete/"+appState.ACID;
         }else if (appState.AC_CURRENT_ACTIVITY_TYPE.equals("presentation")){
-            URL = "http://"+ appState.ENDPOINT + "/v1/companies/assessmentcentres/presentation/complete/"+appState.ACID;
+            URL = "https://"+ appState.ENDPOINT + "/v1/companies/assessmentcentres/presentation/complete/"+appState.ACID;
         }else if (appState.AC_CURRENT_ACTIVITY_TYPE.equals("roleplay")){
-            URL = "http://"+ appState.ENDPOINT + "/v1/companies/assessmentcentres/roleplay/complete/"+appState.ACID;
+            URL = "https://"+ appState.ENDPOINT + "/v1/companies/assessmentcentres/roleplay/complete/"+appState.ACID;
         }
 
         Log.v("ADS", "URL is  .. " + URL);
@@ -612,12 +756,16 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
 
     public class MyAdapter extends RecyclerView.Adapter<ACActivityReviewActivity.MyAdapter.ViewHolder> {
 
-        public MyAdapter(JSONArray testsJSONArray) {
+        private String[] mDataset;
+
+        public MyAdapter(JSONArray reviewPagesJSONArray ){
+
         }
+
 
         public class ViewHolder extends RecyclerView.ViewHolder {
             // each data item is just a string in this case
-
+//            public MyCustomEditTextListener myCustomEditTextListener;
             // create all the needed view refernces for each button
             List<String> mCURRENT_NEGATIVE_INDICATORS = new ArrayList<String>();
             List<String> mCURRENT_POSITIVE_INDICATORS = new ArrayList<String>();
@@ -660,13 +808,28 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
             public EditText comment;
             public  EditText scoure;
 
-//            LinearLayout hud;
             public LinearLayout mediahud;
             public LinearLayout huds;
 
             CardView cv;
+
             ViewHolder(View itemView) {
                 super(itemView);
+
+                mRecyclerViewReview.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                    @Override
+                    public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                        super.onScrolled(recyclerView, dx, dy);
+
+                            View view = getCurrentFocus();
+                            if (view != null) {
+                                InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                            }
+                    }
+
+                });
+
                 cv = (CardView)itemView.findViewById(R.id.review_card_view);
 
                 p1 = (RadioButton) itemView.findViewById(R.id.pi_c1_r1);
@@ -704,15 +867,8 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
                 comment= (EditText) itemView.findViewById(R.id.additional_comments);
                 scoure = (EditText) itemView.findViewById(R.id.overall_score);
 
-//                hud = (LinearLayout) findViewById(R.id.review_hud);
                 mediahud = (LinearLayout) itemView.findViewById(R.id.questions_review_hud);
                 huds = (LinearLayout) itemView.findViewById(R.id.review_hud);
-//                itemView.setOnClickListener(new View.OnClickListener() {
-//                    @Override public void onClick(View v) {
-//
-//                    }
-//                });
-
             }
 
             public ViewHolder(Button v , RadioButton m, EditText x) {
@@ -752,7 +908,6 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
 
                 comment = x;
                 scoure = x;
-
             }
         }
 
@@ -762,13 +917,20 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
             View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.review_cardview, parent, false);
 
             // set the view's size, margins, paddings and layout parameters
+//            ACActivityReviewActivity.MyAdapter.ViewHolder vh = new ACActivityReviewActivity.MyAdapter.ViewHolder(v, new MyCustomEditTextListener());
             ACActivityReviewActivity.MyAdapter.ViewHolder vh = new ACActivityReviewActivity.MyAdapter.ViewHolder(v);
+
+            // pass MyCustomEditTextListener to viewholder in onCreateViewHolder
+            // so that we don't have to do this expensive allocation in onBindViewHolder
+            //ViewHolder vh = new ViewHolder(v, new MyCustomEditTextListener());
+
             return vh;
         }
 
         // Replace the contents of a view (invoked by the layout manager)
         @Override
         public void onBindViewHolder(final ACActivityReviewActivity.MyAdapter.ViewHolder holder, final int position) {
+            Log.e("ADS", "BINDING VIEW CALLED " + String.valueOf(position));
 
             JSONObject n = new JSONObject();
             try {
@@ -843,10 +1005,80 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
             if(mANSWERS_TEXT.get(position).contains(holder.mCURRENT_NEGATIVE_INDICATORS.get(5))){ holder.n6.setChecked(true);}else{holder.n6.setChecked(false); }
 //
 //            if(mANSWERS_TEXT.get(position).contains(holder.comment.getText().toString())){ holder.comment}
-            holder.comment.setText(mTEXT_FOR_COMMENTS.get(position));
-            holder.scoure.setText(mTEXT_FOR_SCOURS.get(position));
-            holder.comment.setTag("c" + String.valueOf(position));
-            holder.scoure.setTag("s" + String.valueOf(position));
+
+            holder.comment.setText("");
+            if(commentsArray[position] != null) {
+                holder.comment.setText(commentsArray[position]);
+            }
+
+            holder.scoure.setText("");
+            if(scoursArray[position] != null){
+                holder.scoure.setText(scoursArray[position]);
+            }
+
+            holder.comment.addTextChangedListener(new TextWatcher() {
+
+                public void afterTextChanged(Editable s) {}
+
+                public void beforeTextChanged(CharSequence s, int start,
+                                              int count, int after) {
+                }
+
+                public void onTextChanged(CharSequence s, int start,
+                                          int before, int count) {
+                    String ans = holder.comment.getText().toString();
+                   // String stored = commentsArray[position];
+                    Log.e("ADS", " " + ans + " and postion = " + String.valueOf(position));
+
+//                    if(ans.length() == 0 && (stored.length() - ans.length()) > 2){
+//                        // This means the recycleview killed the content and hence we need to leave it as it is and not ammend the coent
+//                    }else{
+//                        // here we need to add the ol girt to the array
+//                        commentsArray[position] = ans;
+//                    }
+
+                    if (ans.length() > 0){
+                   // if(holder.comment.getText().toString() != null){
+                        Log.e("ADS", " added " + ans);
+                        commentsArray[position] = ans;
+
+                        Log.e("ADS", Arrays.toString(commentsArray));
+
+                    }
+                    // save ans to sharedpreferences or Database
+                }
+            });
+
+            holder.scoure.addTextChangedListener(new TextWatcher() {
+
+                public void afterTextChanged(Editable s) {}
+
+                public void beforeTextChanged(CharSequence s, int start,
+                                              int count, int after) {
+                }
+
+                public void onTextChanged(CharSequence s, int start,
+                                          int before, int count) {
+                    String ans = holder.scoure.getText().toString();
+                  //  String stored = scoursArray[position];
+                    Log.e("ADS", " " + ans + " and postion = " + String.valueOf(position));
+
+//                    if(ans.length() == 0 && (stored.length() - ans.length()) > 2){
+//                        // This means the recycleview killed the content and hence we need to leave it as it is and not ammend the coent
+//                    }else{
+//                        // here we need to add the ol girt to the array
+//                        scoursArray[position] = ans;
+//                    }
+                    if (ans.length() > 0){
+                    //if(holder.scoure.getText().toString() != null){
+                        scoursArray[position] = ans;
+                    }
+                    // save ans to sharedpreferences or Database
+                }
+            });
+
+//            holder.comment.setTag("c" + String.valueOf(position));
+//            holder.scoure.setTag("s" + String.valueOf(position));
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
                 holder.sd.setTextAlignment(TEXT_ALIGNMENT_TEXT_START);
@@ -928,64 +1160,7 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
                     if(mANSWERS_TEXT.get(position).contains(mselectetion)){RadioButton x = (RadioButton)v; x.setChecked(false); int indexOfObjectToRemove = mANSWERS_TEXT.get(position).indexOf(mselectetion); mANSWERS_TEXT.get(position).remove(indexOfObjectToRemove); mANSWERS_TYPES.get(position).remove(indexOfObjectToRemove);}else{mANSWERS_TEXT.get(position).add(mselectetion); mANSWERS_TYPES.get(position).add("ni");} }
             });
 
-            holder.comment.addTextChangedListener(new TextWatcher() {
-                String curentText = holder.comment.getText().toString();
-                @Override
-                public void afterTextChanged(Editable s) {
-                    // TODO Auto-generated method stub
-                }
 
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                    // TODO Auto-generated method stub
-                }
-
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if(mANSWERS_TEXT.get(position).contains(curentText)) {
-                        int indexOfObjectToRemove = mANSWERS_TEXT.get(position).indexOf(curentText);
-                        mANSWERS_TEXT.get(position).remove(indexOfObjectToRemove);
-                        mANSWERS_TYPES.get(position).remove(indexOfObjectToRemove);
-                        Log.e("ADS", "STRING OF comment IS +>> " + s.toString());
-                        mANSWERS_TEXT.get(position).add(s.toString());
-                        mANSWERS_TYPES.get(position).add("ac");
-                        // add comment string
-                    }else{
-                        mANSWERS_TEXT.get(position).add(s.toString());
-                        mANSWERS_TYPES.get(position).add("ac");
-                    }
-                }
-            });
-
-            holder.scoure.addTextChangedListener(new TextWatcher() {
-                String curentText = holder.scoure.getText().toString();
-                @Override
-                public void afterTextChanged(Editable s) {
-                    // TODO Auto-generated method stub
-                }
-
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                    // TODO Auto-generated method stub
-                }
-
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if(mANSWERS_TEXT.get(position).contains(curentText)){
-                    int indexOfObjectToRemove = mANSWERS_TEXT.get(position).indexOf(curentText);
-                    mANSWERS_TEXT.get(position).remove(indexOfObjectToRemove);
-                    mANSWERS_TYPES.get(position).remove(indexOfObjectToRemove);
-                    Log.e("ADS","STRING OF comment IS +>> " + s.toString());
-                    mANSWERS_TEXT.get(position).add(s.toString());
-                    mANSWERS_TYPES.get(position).add("s");
-                    // add comment strin
-
-                    }else{
-                        mANSWERS_TEXT.get(position).add(s.toString());
-                        mANSWERS_TYPES.get(position).add("s");
-                    }
-                }
-            });
 
         }
 
@@ -1045,7 +1220,7 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
                         }
 
                         // do whats needed inthe player department
-                        mTAPPED_AUDIO_FILE_NAME = filename;
+                        mTAPPED_AUDIO_FILE_NAME = length;
                         Log.e("ADS","FILEPATH ============ " + mTAPPED_AUDIO_FILE_NAME);
                         onPlay(true);
                     }
@@ -1436,7 +1611,7 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
 //    public void getInterviewReviewPages(){
 //
 //        // retrieve the list of participats
-//        String URL = "http://"+ appState.ENDPOINT + "/v1/companies/assessmentcentres/interview/review/"+appState.ACID;
+//        String URL = "https://"+ appState.ENDPOINT + "/v1/companies/assessmentcentres/interview/review/"+appState.ACID;
 //        Log.v("ADS", "URL is  .. " + URL);
 //        HashMap<String, String> params = new HashMap<String, String>();
 //        params.put("username", appState.USERNAME);
@@ -1475,7 +1650,7 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
 //
 //    public  void submit(String answer_text, String answer_type,int question_number){
 //        // perfrom request
-//        String URL = "http://"+ appState.ENDPOINT + "/v1/companies/assessmentcentres/interview/submitreview/"+appState.ACID;
+//        String URL = "https://"+ appState.ENDPOINT + "/v1/companies/assessmentcentres/interview/submitreview/"+appState.ACID;
 //        Log.v("ADS", "URL is  .. " + URL);
 //        HashMap<String, String> params = new HashMap<String, String>();
 //        params.put("answer_text", answer_text);
@@ -1524,7 +1699,7 @@ public class ACActivityReviewActivity extends Activity implements MediaPlayer.On
 //
 //    public void candidateCompletedInterview(String appState.AC_CURRENT_CANDIDATE_ID){
 //        // perfrom request
-//        String URL = "http://"+ appState.ENDPOINT + "/v1/companies/assessmentcentres/interview/complete/"+appState.ACID;
+//        String URL = "https://"+ appState.ENDPOINT + "/v1/companies/assessmentcentres/interview/complete/"+appState.ACID;
 //        Log.v("ADS", "URL is  .. " + URL);
 //        HashMap<String, String> params = new HashMap<String, String>();
 //        params.put("username", appState.USERNAME);

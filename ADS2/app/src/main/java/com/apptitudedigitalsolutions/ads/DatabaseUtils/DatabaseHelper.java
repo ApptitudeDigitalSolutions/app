@@ -21,7 +21,7 @@ import java.util.ArrayList;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
-    public static final String DB_NAME= "ads1.db";
+    public static final String DB_NAME= "ADS.db";
     public static final String TABLE_NAME= "user_crednetial.db";
 
     public DatabaseHelper(Context context) {
@@ -84,7 +84,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public JSONArray getAllAudioFileReferences(String candidateid,String activity_type){
         JSONArray results = new JSONArray();
         SQLiteDatabase db = this.getWritableDatabase();
-        String queryd = "SELECT * FROM ac_audio WHERE candidate_id ="+ candidateid +" AND activity_type = \'"+activity_type+"\';";
+//        String queryd = "SELECT * FROM ac_audio WHERE candidate_id = "+ candidateid +" AND activity_type = \'"+activity_type+"\';";
+
+        String queryd = "SELECT * FROM ac_audio WHERE candidate_id = "+ candidateid +";";
         Cursor res = db.rawQuery(queryd,null);
 
         StringBuffer buffer =  new StringBuffer();
@@ -133,7 +135,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
 //        db.execSQL("DROP TABLE user_crednetials;");
 //        db.execSQL("CREATE TABLE IF NOT EXISTS user_crednetials (id INTEGER, username TEXT , name TEXT ,passcode TEXT, company_id TEXT, endpoint TEXT);");
-        db.execSQL("UPDATE user_crednetials SET id = 1, username = \"\" , name = \"\"  ,passcode = \"\" , company_id = \"\" , endpoint = \"\");");
+        db.execSQL("UPDATE user_crednetials SET id = 1, username = NULL , name = NULL  ,passcode = NULL , company_id = NULL ;");
 
         return true;
 //        String id = "1";

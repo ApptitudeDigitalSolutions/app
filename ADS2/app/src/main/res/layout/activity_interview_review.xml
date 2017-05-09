@@ -47,7 +47,8 @@
                     android:id="@+id/btnPlay"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="play"/>
+                    android:text="play"
+                    android:onClick="pausePlaySelection"/>
 
             </LinearLayout>
         </LinearLayout>

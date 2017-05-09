@@ -25,12 +25,12 @@
             android:layout_marginRight="100dp">
 
             <ScrollView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:orientation="vertical" >
 
                     <Button
@@ -39,7 +39,7 @@
                         android:layout_height="wrap_content"
                         android:id="@+id/question_text"
                         android:textColor="@android:color/black"
-                        android:textSize="18sp"
+                        android:textSize="20sp"
                         android:layout_gravity="start"
                         android:textAlignment="textStart"
                         android:background="@android:color/transparent"
@@ -48,6 +48,8 @@
 
                     <Button
                         android:text=""
+                        android:layout_weight="1"
+                        android:textSize="20sp"
                         android:textAlignment="textStart"
                         android:layout_gravity="start"
                         android:layout_width="match_parent"
@@ -56,6 +58,8 @@
 
                     <Button
                         android:text=""
+                        android:textSize="20sp"
+                        android:layout_weight="1"
                         android:textAlignment="textStart"
                         android:layout_gravity="start"
                         android:layout_width="match_parent"
@@ -64,6 +68,8 @@
 
                     <Button
                         android:text=""
+                        android:textSize="20sp"
+                        android:layout_weight="1"
                         android:textAlignment="textStart"
                         android:layout_gravity="start"
                         android:layout_width="match_parent"
@@ -72,6 +78,8 @@
 
                     <Button
                         android:text=""
+                        android:textSize="20sp"
+                        android:layout_weight="1"
                         android:textAlignment="textStart"
                         android:layout_gravity="start"
                         android:layout_width="match_parent"
@@ -79,8 +87,6 @@
                         android:id="@+id/answer_4" />
                 </LinearLayout>
             </ScrollView>
-
         </LinearLayout>
-
     </LinearLayout>
 </LinearLayout>
